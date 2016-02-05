@@ -4,4 +4,4 @@
 - use fully convolutional network + convolutional regression network
 	1. pretrain fully convolutional using sunnybrook dataset
 	2. fine tune using kaggle dataset
-- refine cost function (same as the one used in kaggle = discretised pdf + l1 norm)
+- refine cost function (same as the one used in kaggle = discretised pdf + l2 norm (mse) )
