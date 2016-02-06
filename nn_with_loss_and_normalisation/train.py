@@ -102,7 +102,7 @@ def train():
         val_loss_systole = hist_systole.history['val_loss'][-1]
         val_loss_diastole = hist_diastole.history['val_loss'][-1]
 
-        if calc_crps > 0 and i % calc_crps == 0:
+        if False and calc_crps > 0 and i % calc_crps == 0:
             print('Evaluating CRPS...')
             pred_systole = model_systole.predict(X_train, batch_size=batch_size, verbose=1)
             pred_diastole = model_diastole.predict(X_train, batch_size=batch_size, verbose=1)
