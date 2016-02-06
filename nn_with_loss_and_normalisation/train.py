@@ -5,7 +5,7 @@ import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
 
 from model import get_model
-from utils import crps, real_to_cdf, preprocess, rotation_augmentation, shift_augmentation, from_values_to_step_probability
+from utils import crps, real_to_cdf, preprocess, rotation_augmentation, shift_augmentation
 
 
 def load_train_data():
@@ -60,10 +60,6 @@ def train():
 
     # split to training and test
     X_train, y_train, X_test, y_test = split_data(X, y, split_ratio=0.2)
-    y_train_systole                  = from_values_to_step_probability(y_train[:, 0], n_range=600) # ADDED
-    y_train_diastole                 = from_values_to_step_probability(y_train[:, 1], n_range=600) # ADDED
-    y_test_systole                   = from_values_to_step_probability(y_test[:, 0], n_range=600)  # ADDED
-    y_test_diastole                  = from_values_to_step_probability(y_test[:, 1], n_range=600)  # ADDED
 
     nb_iter = 200
     epochs_per_iter = 1
@@ -89,12 +85,12 @@ def train():
         X_train_aug = shift_augmentation(X_train_aug, 0.1, 0.1)
 
         print('Fitting systole model...')
-        hist_systole = model_systole.fit(X_train_aug, y_train_systole, shuffle=True, nb_epoch=epochs_per_iter,
-                                         batch_size=batch_size, validation_data=(X_test, y_test_systole))
+        hist_systole = model_systole.fit(X_train_aug, y_train[:, 0], shuffle=True, nb_epoch=epochs_per_iter,
+                                         batch_size=batch_size, validation_data=(X_test, y_test[:, 0]))
 
         print('Fitting diastole model...')
-        hist_diastole = model_diastole.fit(X_train_aug, y_train_diastole, shuffle=True, nb_epoch=epochs_per_iter,
-                                           batch_size=batch_size, validation_data=(X_test, y_test_diastole))
+        hist_diastole = model_diastole.fit(X_train_aug, y_train[:, 1], shuffle=True, nb_epoch=epochs_per_iter,
+                                           batch_size=batch_size, validation_data=(X_test, y_test[:, 1]))
 
         # sigmas for predicted data, actually loss function values (RMSE)
         loss_systole = hist_systole.history['loss'][-1]
@@ -102,7 +98,7 @@ def train():
         val_loss_systole = hist_systole.history['val_loss'][-1]
         val_loss_diastole = hist_diastole.history['val_loss'][-1]
 
-        if False and calc_crps > 0 and i % calc_crps == 0:
+        if calc_crps > 0 and i % calc_crps == 0:
             print('Evaluating CRPS...')
             pred_systole = model_systole.predict(X_train, batch_size=batch_size, verbose=1)
             pred_diastole = model_diastole.predict(X_train, batch_size=batch_size, verbose=1)
@@ -110,8 +106,8 @@ def train():
             val_pred_diastole = model_diastole.predict(X_test, batch_size=batch_size, verbose=1)
 
             # CDF for train and test data (actually a step function)
-            cdf_train = real_to_cdf(np.concatenate((y_train_systole, y_train_diastole)))
-            cdf_test = real_to_cdf(np.concatenate((y_test_systole, y_test_diastole)))
+            cdf_train = real_to_cdf(np.concatenate((y_train[:, 0], y_train[:, 1])))
+            cdf_test = real_to_cdf(np.concatenate((y_test[:, 0], y_test[:, 1])))
 
             # CDF for predicted data
             cdf_pred_systole = real_to_cdf(pred_systole, loss_systole)

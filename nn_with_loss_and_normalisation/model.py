@@ -2,8 +2,8 @@ from __future__ import print_function
 
 from keras.models import Sequential
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
-from keras.layers.core import Activation, Dense, Flatten, Dropout
 from keras.layers.normalization import BatchNormalization
+from keras.layers.core import Activation, Dense, Flatten, Dropout
 from keras.optimizers import Adam
 from keras.regularizers import l2
 from keras import backend as K
@@ -43,7 +43,7 @@ def get_model():
     model.add(Convolution2D(128, 2, 2, border_mode='same'))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Convolution2D(128, 2, 2, border_mode='valid'))
+    model.add(Convolution2D(128, 2, 2, border_mode='same'))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
@@ -53,7 +53,7 @@ def get_model():
     model.add(Dense(1024, W_regularizer=l2(1e-3)))
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(600, activation='sigmoid'))
+    model.add(Dense(1))
 
     adam = Adam(lr=0.0001)
     model.compile(optimizer=adam, loss='mse')

@@ -7,19 +7,6 @@ from scipy import ndimage
 from keras.utils.generic_utils import Progbar
 
 
-def from_values_to_step_probability(values, n_range=600):
-    """
-    Set the output to a step probability distribution
-    The probability distribution has a many values as n_range
-    Return a np array with for each line the step probability distribution
-    """
-    numberOfValues  = len(values)
-    output          = np.zeros([numberOfValues, n_range])
-    for i in range(numberOfValues):
-        output[i, values[i]:]  = 1
-    return output
-
-
 def crps(true, pred):
     """
     Calculation of CRPS.
