@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from lasagne.regularization import regularize_layer_params, l2
-from lasagne.layers import InputLayer, DropoutLayer, DenseLayer, batch_norm, get_output, ConcatLayer, LSTMLayer, get_all_params
+from lasagne.layers import InputLayer, DropoutLayer, DenseLayer, batch_norm, get_output, ConcatLayer, LSTMLayer, get_all_params, DimshuffleLayer
 from lasagne.nonlinearities import leaky_rectify,softmax
 from lasagne.objectives import squared_error
 from lasagne.updates import nesterov_momentum
@@ -19,14 +19,14 @@ def center_normalize(x):
 
 def get_model():
 
-    # Prepare Theano variables for inputs and targets
-    dtensor5 = T.TensorType('float32', (False,)*5)
-    input_var = dtensor5('inputs')
+    dtensor4 = T.TensorType('float32', (False,)*4)
+    input_var = dtensor4('inputs')
     dtensor1 = T.TensorType('float32', (False,)*1)
     target_var = dtensor1('targets')
 
     # input layer with unspecified batch size
-    layer_0         = InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
+    layer_input     = InputLayer(shape=(None, 30, 64, 64), input_var=input_var) #InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
+    layer_0         = DimshuffleLayer(layer_input, (0, 'x', 1, 2, 3))
 
     # Z-score?
 
@@ -41,12 +41,13 @@ def get_model():
     layer_6         = DropoutLayer(layer_5, p=0.25)
 
     # Recurrent layer
-    layer_7         = LSTMLayer(layer_6, num_units=612)
-    layer_8         = DropoutLayer(layer_7, p=0.25)
+    layer_7         = DimshuffleLayer(layer_6, (0,2,1,3,4))
+    layer_8         = LSTMLayer(layer_7, num_units=612, only_return_final=True)
+    layer_9         = DropoutLayer(layer_8, p=0.25)
 
     # Output Layer
-    layer_systole   = DenseLayer(layer_8, 600, nonlinearity=softmax)
-    layer_diastole  = DenseLayer(layer_8, 600, nonlinearity=softmax)
+    layer_systole   = DenseLayer(layer_9, 600, nonlinearity=softmax)
+    layer_diastole  = DenseLayer(layer_9, 600, nonlinearity=softmax)
     layer_output    = ConcatLayer([layer_systole, layer_diastole])
 
     # Loss
