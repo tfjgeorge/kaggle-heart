@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from lasagne.regularization import regularize_layer_params, l2
 from lasagne.layers import InputLayer, DropoutLayer, DenseLayer, batch_norm, get_output, ConcatLayer, LSTMLayer, get_all_params, DimshuffleLayer
-from lasagne.nonlinearities import leaky_rectify,softmax
+from lasagne.nonlinearities import leaky_rectify,sigmoid
 from lasagne.objectives import squared_error
 from lasagne.updates import nesterov_momentum
 from lasagne.layers.dnn import Conv3DDNNLayer, MaxPool3DDNNLayer
@@ -46,8 +46,8 @@ def get_model():
     layer_9         = DropoutLayer(layer_8, p=0.25)
 
     # Output Layer
-    layer_systole   = DenseLayer(layer_9, 600, nonlinearity=softmax)
-    layer_diastole  = DenseLayer(layer_9, 600, nonlinearity=softmax)
+    layer_systole   = DenseLayer(layer_9, 600, nonlinearity=sigmoid)
+    layer_diastole  = DenseLayer(layer_9, 600, nonlinearity=sigmoid)
     layer_output    = ConcatLayer([layer_systole, layer_diastole])
 
     # Loss
