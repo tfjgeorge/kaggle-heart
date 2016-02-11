@@ -5,7 +5,7 @@ from model import get_model
 import sys
 import numpy as np
 from lasagne.layers import get_all_param_values
-from utils import crps, real_to_cdf, preprocess, rotation_augmentation, shift_augmentation, from_values_to_step_probability
+from utils import crps, real_to_cdf, preprocess, rotation_augmentation, shift_augmentation, from_values_to_dirac
 
 
 def load_train_data():
@@ -68,14 +68,14 @@ def train():
     X, y = load_train_data()
 
     print('Pre-processing images...')
-    X = preprocess(X)
+    #X = preprocess(X)
 
     # split to training and test
     X_train, y_train, X_test, y_test = split_data(X, y, split_ratio=0.2)
-    y_train_systole                  = from_values_to_step_probability(y_train[:, 0], n_range=600) # ADDED
-    y_train_diastole                 = from_values_to_step_probability(y_train[:, 1], n_range=600) # ADDED
-    y_test_systole                   = from_values_to_step_probability(y_test[:, 0], n_range=600)  # ADDED
-    y_test_diastole                  = from_values_to_step_probability(y_test[:, 1], n_range=600)  # ADDED
+    y_train_systole                  = from_values_to_dirac(y_train[:, 0], n_range=600) # ADDED
+    y_train_diastole                 = from_values_to_dirac(y_train[:, 1], n_range=600) # ADDED
+    y_test_systole                   = from_values_to_dirac(y_test[:, 0], n_range=600)  # ADDED
+    y_test_diastole                  = from_values_to_dirac(y_test[:, 1], n_range=600)  # ADDED
 
     # concatenate systole and diastole outputs
     y_train                          = np.concatenate((y_train_systole, y_train_diastole), axis=1)
@@ -83,7 +83,7 @@ def train():
 
     nb_epoch = 200
     batch_size = 32
-    calc_crps = 0  # calculate CRPS every n-th iteration (set to 0 if CRPS estimation is not needed)
+    calc_crps = 0  # calculate CRPS every n-th iteration (set to 0 if CRPS estimation is not needed) NOT IMPLEMENTED YET
 
     print('-'*50)
     print('Training...')
@@ -118,29 +118,29 @@ def train():
             val_err            += val_fn(inputs, targets)
             val_batches        += 1
 
-        assert(calc_crps == 0)
-        if calc_crps > 0 and i % calc_crps == 0:
-            print('Evaluating CRPS...')
-            train_pred        = predict_fn(X_train)
-            val_pred          = predict_fn(X_test)
+        # assert(calc_crps == 0)
+        # if calc_crps > 0 and i % calc_crps == 0:
+        #     print('Evaluating CRPS...')
+        #     train_pred        = predict_fn(X_train)
+        #     val_pred          = predict_fn(X_test)
 
-            pred_systole      = train_pred[:600]
-            pred_diastole     = train_pred[600:]
+        #     pred_systole      = train_pred[:600]
+        #     pred_diastole     = train_pred[600:]
 
 
-            # CDF for train and test prediction
-            pred_systole      = np.cumsum(pred_systole, axis=1)
-            pred_diastole     = np.cumsum(pred_diastole, axis=1)
-            val_pred_systole  = np.cumsum(val_pred_systole, axis=1)
-            val_pred_diastole = np.cumsum(val_pred_diastole, axis=1)
+        #     # CDF for train and test prediction
+        #     pred_systole      = np.cumsum(pred_systole, axis=1)
+        #     pred_diastole     = np.cumsum(pred_diastole, axis=1)
+        #     val_pred_systole  = np.cumsum(val_pred_systole, axis=1)
+        #     val_pred_diastole = np.cumsum(val_pred_diastole, axis=1)
 
-            # evaluate CRPS on training data
-            crps_train = crps(y_train, np.concatenate((pred_systole)))
-            print('CRPS(train) = {0}'.format(crps_train))
+        #     # evaluate CRPS on training data
+        #     crps_train = crps(y_train, np.concatenate((pred_systole)))
+        #     print('CRPS(train) = {0}'.format(crps_train))
 
-            # evaluate CRPS on test data
-            crps_test = crps(cdf_test, np.concatenate((val_pred_systole, val_pred_diastole)))
-            print('CRPS(test) = {0}'.format(crps_test))
+        #     # evaluate CRPS on test data
+        #     crps_test = crps(cdf_test, np.concatenate((val_pred_systole, val_pred_diastole)))
+        #     print('CRPS(test) = {0}'.format(crps_test))
 
         print('Saving weights...')
         # save weights so they can be loaded later
@@ -152,7 +152,8 @@ def train():
             np.savez('weights_best.hdf5.npz', *get_all_param_values(model))
 
         # save best (lowest) val losses in file (to be later used for generating submission)
-        with open('val_loss.txt', mode='w+') as f:
-            f.write(str(min_val_err))
+        with open('val_loss.txt', mode='a') as f:
+            f.write(str(val_err))
+            f.write('\n')
 
 train()

@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from lasagne.regularization import regularize_layer_params, l2
 from lasagne.layers import InputLayer, DropoutLayer, DenseLayer, batch_norm, get_output, ConcatLayer, LSTMLayer, get_all_params, DimshuffleLayer
-from lasagne.nonlinearities import leaky_rectify,sigmoid
+from lasagne.nonlinearities import leaky_rectify, softmax
 from lasagne.objectives import squared_error
 from lasagne.updates import nesterov_momentum
 from lasagne.layers.dnn import Conv3DDNNLayer, MaxPool3DDNNLayer
@@ -21,8 +21,8 @@ def get_model():
 
     dtensor4 = T.TensorType('float32', (False,)*4)
     input_var = dtensor4('inputs')
-    dtensor1 = T.TensorType('float32', (False,)*1)
-    target_var = dtensor1('targets')
+    dtensor2 = T.TensorType('float32', (False,)*2)
+    target_var = dtensor2('targets')
 
     # input layer with unspecified batch size
     layer_input     = InputLayer(shape=(None, 30, 64, 64), input_var=input_var) #InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
@@ -46,8 +46,8 @@ def get_model():
     layer_9         = DropoutLayer(layer_8, p=0.25)
 
     # Output Layer
-    layer_systole   = DenseLayer(layer_9, 600, nonlinearity=sigmoid)
-    layer_diastole  = DenseLayer(layer_9, 600, nonlinearity=sigmoid)
+    layer_systole   = DenseLayer(layer_9, 600, nonlinearity=softmax)
+    layer_diastole  = DenseLayer(layer_9, 600, nonlinearity=softmax)
     layer_output    = ConcatLayer([layer_systole, layer_diastole])
 
     # Loss
@@ -67,13 +67,13 @@ def get_model():
 
     # Compile a function performing a training step on a mini-batch (by giving
     # the updates dictionary) and returning the corresponding training loss:
-    train_fn             = theano.function([input_var, target_var], loss, updates=updates)
+    train_fn             = theano.function([input_var, target_var], loss, updates=updates, allow_input_downcast=True)
 
-    # Compile a second function computing the validation loss and accuracy:
-    val_fn               = theano.function([input_var, target_var], test_loss)
+    # Compile a second function computing the validation loss and accuracy
+    val_fn               = theano.function([input_var, target_var], test_loss, allow_input_downcast=True)
 
     # Compule a third function computing the prediction
-    predict_fn           = theano.function([input_var], test_prediction)
+    predict_fn           = theano.function([input_var], test_prediction, allow_input_downcast=True)
 
     return [layer_output, train_fn, val_fn, predict_fn]
 

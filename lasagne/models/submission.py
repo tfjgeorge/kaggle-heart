@@ -5,6 +5,7 @@ import numpy as np
 
 from model import get_model
 from utils import real_to_cdf, preprocess
+from lasagne.layers import set_all_param_values
 
 
 def load_validation_data():
@@ -46,32 +47,40 @@ def submission():
     Generate submission file for the trained models.
     """
     print('Loading and compiling models...')
-    model_systole = get_model()
-    model_diastole = get_model()
+    [model, train_fn, val_fn, predict_fn] = get_model()
 
     print('Loading models weights...')
-    model_systole.load_weights('weights_systole_best.hdf5')
-    model_diastole.load_weights('weights_diastole_best.hdf5')
+
+    with np.load('weights_best.hdf5.npz') as f:
+        param_values = [f['arr_%d' % i] for i in range(len(f.files))]
+    set_all_param_values(model, param_values)
 
     # load val losses to use as sigmas for CDF
-    with open('val_loss.txt', mode='r') as f:
-        val_loss_systole = float(f.readline())
-        val_loss_diastole = float(f.readline())
+    # with open('val_loss.txt', mode='r') as f:
+    #     val_loss_systole = float(f.readline())
+    #     val_loss_diastole = float(f.readline())
 
     print('Loading validation data...')
     X, ids = load_validation_data()
 
     print('Pre-processing images...')
-    X = preprocess(X)
+    #X = preprocess(X)
 
-    batch_size = 32
+    #batch_size = 32
+    pred_systole     = np.zeros([X.shape[0], 600])
+    pred_diastole    = np.zeros([X.shape[0], 600])
     print('Predicting on validation data...')
-    pred_systole = model_systole.predict(X, batch_size=batch_size, verbose=1)
-    pred_diastole = model_diastole.predict(X, batch_size=batch_size, verbose=1)
+    nb_of_batches    = 10
+    list_indexes     = np.linspace(0,X.shape[0],nb_of_batches + 1,dtype=np.int)
 
-    # real predictions to CDF
-    cdf_pred_systole = real_to_cdf(pred_systole, val_loss_systole)
-    cdf_pred_diastole = real_to_cdf(pred_diastole, val_loss_diastole)
+    for i in range(nb_of_batches):
+        pred                                             = predict_fn(X[list_indexes[i]:list_indexes[i+1]])
+        pred_systole[list_indexes[i]:list_indexes[i+1]]  = pred[:,:600]
+        pred_diastole[list_indexes[i]:list_indexes[i+1]] = pred[:,600:]
+
+    # CDF for train and test prediction
+    cdf_pred_systole      = np.cumsum(pred_systole, axis=1)
+    cdf_pred_diastole     = np.cumsum(pred_diastole, axis=1)
 
     print('Accumulating results...')
     sub_systole = accumulate_study_results(ids, cdf_pred_systole)
@@ -97,7 +106,5 @@ def submission():
             print('Miss {0}'.format(idx))
         fo.writerow(out)
     f.close()
-
-    print('Done.')
 
 submission()
