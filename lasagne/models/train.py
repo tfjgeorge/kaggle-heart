@@ -67,19 +67,19 @@ def train():
     print('Loading training data...')
     X, y = load_train_data()
 
-    print('Pre-processing images...')
+    #print('Pre-processing images...')
     #X = preprocess(X)
 
     # split to training and test
     X_train, y_train, X_test, y_test = split_data(X, y, split_ratio=0.2)
-    y_train_systole                  = from_values_to_dirac(y_train[:, 0], n_range=600) # ADDED
-    y_train_diastole                 = from_values_to_dirac(y_train[:, 1], n_range=600) # ADDED
-    y_test_systole                   = from_values_to_dirac(y_test[:, 0], n_range=600)  # ADDED
-    y_test_diastole                  = from_values_to_dirac(y_test[:, 1], n_range=600)  # ADDED
+    #y_train_systole                  = from_values_to_dirac(y_train[:, 0], n_range=600) # ADDED
+    #y_train_diastole                 = from_values_to_dirac(y_train[:, 1], n_range=600) # ADDED
+    #y_test_systole                   = from_values_to_dirac(y_test[:, 0], n_range=600)  # ADDED
+    #y_test_diastole                  = from_values_to_dirac(y_test[:, 1], n_range=600)  # ADDED
 
     # concatenate systole and diastole outputs
-    y_train                          = np.concatenate((y_train_systole, y_train_diastole), axis=1)
-    y_test                           = np.concatenate((y_test_systole, y_test_diastole), axis=1)
+    #y_train                          = np.concatenate((y_train_systole, y_train_diastole), axis=1)
+    #y_test                           = np.concatenate((y_test_systole, y_test_diastole), axis=1)
 
     nb_epoch = 200
     batch_size = 32
@@ -90,7 +90,7 @@ def train():
     print('-'*50)
 
     min_val_err  = sys.float_info.max
-
+    patience     = 0
     for i in range(nb_epoch):
         print('-'*50)
         print('Iteration {0}/{1}'.format(i + 1, nb_epoch))
@@ -117,7 +117,10 @@ def train():
             inputs, targets     = batch
             val_err            += val_fn(inputs, targets)
             val_batches        += 1
-
+        print('error on validation set: ' + str(val_err))
+        print('patience variable is: ' + str(patience))
+        print('\n')
+        
         # assert(calc_crps == 0)
         # if calc_crps > 0 and i % calc_crps == 0:
         #     print('Evaluating CRPS...')
@@ -144,16 +147,21 @@ def train():
 
         print('Saving weights...')
         # save weights so they can be loaded later
-        np.savez('weights.hdf5.npz', *get_all_param_values(model))
+        np.savez('weights.npz', *get_all_param_values(model))
 
         # for best (lowest) val losses, save weights
         if val_err < min_val_err:
+            patience    = 0
             min_val_err = val_err
-            np.savez('weights_best.hdf5.npz', *get_all_param_values(model))
+            np.savez('weights_best.npz', *get_all_param_values(model))
+        else:
+            patience   += 1
 
         # save best (lowest) val losses in file (to be later used for generating submission)
         with open('val_loss.txt', mode='a') as f:
             f.write(str(val_err))
             f.write('\n')
-
+        
+        if (patience == 5):
+            break
 train()
