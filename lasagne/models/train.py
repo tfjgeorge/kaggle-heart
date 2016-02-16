@@ -72,14 +72,6 @@ def train():
 
     # split to training and test
     X_train, y_train, X_test, y_test = split_data(X, y, split_ratio=0.2)
-    #y_train_systole                  = from_values_to_dirac(y_train[:, 0], n_range=600) # ADDED
-    #y_train_diastole                 = from_values_to_dirac(y_train[:, 1], n_range=600) # ADDED
-    #y_test_systole                   = from_values_to_dirac(y_test[:, 0], n_range=600)  # ADDED
-    #y_test_diastole                  = from_values_to_dirac(y_test[:, 1], n_range=600)  # ADDED
-
-    # concatenate systole and diastole outputs
-    #y_train                          = np.concatenate((y_train_systole, y_train_diastole), axis=1)
-    #y_test                           = np.concatenate((y_test_systole, y_test_diastole), axis=1)
 
     nb_epoch = 200
     batch_size = 32
@@ -117,37 +109,10 @@ def train():
             inputs, targets     = batch
             val_err            += val_fn(inputs, targets)
             val_batches        += 1
-        print('error on validation set: ' + str(val_err))
-        print('patience variable is: ' + str(patience))
-        print('\n')
-        
-        # assert(calc_crps == 0)
-        # if calc_crps > 0 and i % calc_crps == 0:
-        #     print('Evaluating CRPS...')
-        #     train_pred        = predict_fn(X_train)
-        #     val_pred          = predict_fn(X_test)
-
-        #     pred_systole      = train_pred[:600]
-        #     pred_diastole     = train_pred[600:]
-
-
-        #     # CDF for train and test prediction
-        #     pred_systole      = np.cumsum(pred_systole, axis=1)
-        #     pred_diastole     = np.cumsum(pred_diastole, axis=1)
-        #     val_pred_systole  = np.cumsum(val_pred_systole, axis=1)
-        #     val_pred_diastole = np.cumsum(val_pred_diastole, axis=1)
-
-        #     # evaluate CRPS on training data
-        #     crps_train = crps(y_train, np.concatenate((pred_systole)))
-        #     print('CRPS(train) = {0}'.format(crps_train))
-
-        #     # evaluate CRPS on test data
-        #     crps_test = crps(cdf_test, np.concatenate((val_pred_systole, val_pred_diastole)))
-        #     print('CRPS(test) = {0}'.format(crps_test))
 
         print('Saving weights...')
         # save weights so they can be loaded later
-        np.savez('weights.npz', *get_all_param_values(model))
+        # np.savez('weights.npz', *get_all_param_values(model))
 
         # for best (lowest) val losses, save weights
         if val_err < min_val_err:
@@ -157,11 +122,15 @@ def train():
         else:
             patience   += 1
 
+        print('error on validation set: ' + str(val_err))
+        print('patience variable is: ' + str(patience))
+        print('\n')
+        
         # save best (lowest) val losses in file (to be later used for generating submission)
         with open('val_loss.txt', mode='a') as f:
             f.write(str(val_err))
             f.write('\n')
         
-        if (patience == 5):
+        if (patience == 8):
             break
 train()
