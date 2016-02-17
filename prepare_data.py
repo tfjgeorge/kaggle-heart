@@ -1,13 +1,15 @@
 import os
 import h5py
 from fuel.converters.base import progress_bar
-import numpy     as np
+import numpy
 import dicom
+from fuel.datasets.hdf5 import H5PYDataset
+
+import matplotlib.pyplot as plt
 
 
-
-def get_frames(root_path):
-   """Get path to all the frame in view SAX and contain complete frames"""
+def get_features(root_path):
+   """Get path to all the frame in view SAX and contain complete features"""
    ret = []
    for root, _, files in os.walk(root_path):
        root=root.replace('\\','/')
@@ -36,7 +38,7 @@ def get_data(lst,preproc):
    result = []
    for path in lst:
        f = dicom.read_file(path)
-       img = preproc(f.pixel_array.astype(float) / np.max(f.pixel_array))
+       img = f.pixel_array
        dst_path = path.rsplit(".", 1)[0] + ".64x64.jpg"
        # scipy.misc.imsave(dst_path, img)
        result.append(dst_path)
@@ -44,8 +46,8 @@ def get_data(lst,preproc):
    return [data,result]
 
 labels = get_label_map("./data_kaggle/train.csv")
-train_frames = get_frames('./data_kaggle/train')
-submit_frames = get_frames('./data_kaggle/validate')
+train_features = get_features('./data_kaggle/train')
+submit_features = get_features('./data_kaggle/validate')
 
 n_examples_train = 5293
 n_examples_submit = 2128
@@ -53,9 +55,10 @@ n_total = n_examples_train + n_examples_submit
 
 output_path = './data_kaggle/kaggle_heart.hdf5'
 h5file = h5py.File(output_path, mode='w')
-dtype = h5py.special_dtype(vlen=np.dtype('uint8'))
-hdf_features = h5file.create_dataset('sax_frames', (n_total,), dtype=dtype)
-hdf_shapes = h5file.create_dataset('sax_frames_shapes', (n_total, 3), dtype='int32')
+dtype = h5py.special_dtype(vlen=numpy.dtype('uint16'))
+
+hdf_features = h5file.create_dataset('sax_features', (n_total,), dtype=dtype)
+hdf_shapes = h5file.create_dataset('sax_features_shapes', (n_total, 3), dtype='int32')
 hdf_cases = h5file.create_dataset('cases', (n_total, 1), dtype='int32')
 hdf_labels = h5file.create_dataset('targets', (n_total, 2), dtype='float32')
 
@@ -63,8 +66,8 @@ hdf_labels = h5file.create_dataset('targets', (n_total, 2), dtype='float32')
 hdf_features.dims.create_scale(hdf_shapes, 'shapes')
 hdf_features.dims[0].attach_scale(hdf_shapes)
 
-hdf_shapes_labels = h5file.create_dataset('sax_frames_shapes_labels', (3,), dtype='S7')
-hdf_shapes_labels[...] = ['frames'.encode('utf8'),
+hdf_shapes_labels = h5file.create_dataset('sax_features_labels', (3,), dtype='S7')
+hdf_shapes_labels[...] = ['features'.encode('utf8'),
                           'height'.encode('utf8'),
                           'width'.encode('utf8')]
 hdf_features.dims.create_scale(hdf_shapes_labels, 'shape_labels')
@@ -79,42 +82,42 @@ hdf_cases.dims[1].label = 'index'
 
 ### loading train
 i = 0
-with progress_bar('train ', n_examples_train) as bar:
-    for sequence in train_frames:
-        d = get_data(sequence, lambda x: x)
-        images = np.array(d[0])
 
-        hdf_features[i] = images.flatten()
+with progress_bar('train ', n_examples_train) as bar:
+    for sequence in train_features:
+        d = get_data(sequence, lambda x: x)
+        images = numpy.array(d[0])
+
+        hdf_features[i] = images.flatten().astype(numpy.dtype('uint16'))
         hdf_shapes[i] = images.shape
 
         path = d[1][1].split('/')
-        hdf_labels[i] = labels[int(path[3])]
+        hdf_labels[i] = numpy.array(labels[int(path[3])])
         hdf_cases[i] = int(path[3])
 
         i += 1
         bar.update(i)
 
 ### loading submit
-i = 0
 with progress_bar('submit', n_examples_submit) as bar:
-    for sequence in submit_frames:
+    for sequence in submit_features:
         d = get_data(sequence, lambda x: x)
-        images = np.array(d[0])
+        images = numpy.array(d[0])
 
-        hdf_features[i] = images.flatten()
+        hdf_features[i] = images.flatten().astype(numpy.dtype('uint16'))
         hdf_shapes[i] = images.shape
 
         path = d[1][1].split('/')
         hdf_cases[i] = int(path[3])
 
         i += 1
-        bar.update(i)
+        bar.update(i - n_examples_train)
 
 # Add the labels
 split_dict = {}
-sources = ['sax_frames', 'targets', 'cases']
+sources = ['sax_features', 'targets', 'cases']
 for name, slice_ in zip(['train', 'submit'],
-                        [(0, n_examples_train), (n_examples_train, n_examples_submit)]):
+                        [(0, n_examples_train), (n_examples_train, n_total)]):
     split_dict[name] = dict(zip(sources, [slice_] * len(sources)))
 h5file.attrs['split'] = H5PYDataset.create_split_array(split_dict)
 
