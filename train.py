@@ -10,14 +10,16 @@ import datetime
 import socket
 
 train_stream = ServerDataStream(('cases','sax_features','targets'), False)
+valid_stream = ServerDataStream(('cases','sax_features','targets'), False, port=5558)
 
 input_var = tensor.tensor4('sax_features')
 target_var = tensor.matrix('targets')
 
 from models.m2x2DCNN import get_model
-prediction, loss, params = get_model(input_var, target_var)
+prediction, crps, loss, params = get_model(input_var, target_var)
 
 loss.name = 'loss'
+crps.name = 'crps'
 
 algorithm = GradientDescent(
 	cost=loss,
@@ -31,8 +33,8 @@ host_plot = 'http://localhost:5006'
 extensions = [
 	Timing(),
 	TrainingDataMonitoring([loss], after_epoch=True),
-	# DataStreamMonitoring(variables=[loss, error], data_stream=valid_stream, prefix="valid"),
-	Plot('%s %s @ %s' % ('test1', datetime.datetime.now(), socket.gethostname()), channels=[['loss', 'valid_loss_test'], ['valid_error']], after_epoch=True, server_url=host_plot),
+	DataStreamMonitoring(variables=[crps], data_stream=valid_stream, prefix="valid"),
+	Plot('%s %s @ %s' % ('test1', datetime.datetime.now(), socket.gethostname()), channels=[['loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
 	Printing(),
 	# Checkpoint('train')
 ]

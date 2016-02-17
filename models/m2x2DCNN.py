@@ -53,6 +53,9 @@ def get_model(input_var, target_var):
     loss                 = squared_error(prediction, target_var)
     loss                 = loss.mean()
 
+    # crps estimate
+    crps                 = T.abs_(prediction - target_var).mean()/600
+
     #Updates : Stochastic Gradient Descent (SGD) with Nesterov momentum
     params               = get_all_params(layer_prediction, trainable=True)
 
@@ -62,7 +65,7 @@ def get_model(input_var, target_var):
     test_loss            = squared_error(test_prediction, target_var)
     test_loss            = test_loss.mean()
 
-    return test_prediction, loss, params
+    return test_prediction, crps, loss, params
 
 
 
