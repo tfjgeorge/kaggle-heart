@@ -17,12 +17,7 @@ def center_normalize(x):
     return (x - K.mean(x)) / K.std(x)
 
 
-def get_model():
-
-    dtensor4 = T.TensorType('float32', (False,)*4)
-    input_var = dtensor4('inputs')
-    dtensor2 = T.TensorType('float32', (False,)*2)
-    target_var = dtensor2('targets')
+def get_model(input_var, target_var):
 
     # input layer with unspecified batch size
     layer_input     = InputLayer(shape=(None, 30, 64, 64), input_var=input_var) #InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
@@ -46,43 +41,24 @@ def get_model():
     layer_9         = DropoutLayer(layer_8, p=0.25)
 
     # Output Layer
-    layer_systole   = DenseLayer(layer_9, 600, nonlinearity=softmax)
-    layer_diastole  = DenseLayer(layer_9, 600, nonlinearity=softmax)
-    layer_output    = ConcatLayer([layer_systole, layer_diastole])
+    layer_hidden         = DenseLayer(layer_flatten, 500, nonlinearity=sigmoid)
+    layer_prediction     = DenseLayer(layer_hidden, 2, nonlinearity=linear)
 
     # Loss
     prediction           = get_output(layer_output) 
     loss                 = squared_error(prediction, target_var)
     loss                 = loss.mean()
 
+    # crps estimate
+    crps                 = T.abs_(prediction - target_var).mean()/600
+
     #Updates : Stochastic Gradient Descent (SGD) with Nesterov momentum
-    params               = get_all_params(layer_output, trainable=True)
-    updates              = nesterov_momentum(loss, params, learning_rate=0.01, momentum=0.9)
+    params               = get_all_params(layer_prediction, trainable=True)
 
     # Create a loss expression for validation/testing. The crucial difference
     # here is that we do a deterministic forward pass through the network, disabling dropout layers.
-    test_prediction      = get_output(layer_output, deterministic=True)
+    test_prediction      = get_output(layer_prediction, deterministic=True)
     test_loss            = squared_error(test_prediction, target_var)
     test_loss            = test_loss.mean()
 
-    # Compile a function performing a training step on a mini-batch (by giving
-    # the updates dictionary) and returning the corresponding training loss:
-    train_fn             = theano.function([input_var, target_var], loss, updates=updates, allow_input_downcast=True)
-
-    # Compile a second function computing the validation loss and accuracy
-    val_fn               = theano.function([input_var, target_var], test_loss, allow_input_downcast=True)
-
-    # Compule a third function computing the prediction
-    predict_fn           = theano.function([input_var], test_prediction, allow_input_downcast=True)
-
-    return [layer_output, train_fn, val_fn, predict_fn]
-
-
-
-
-
-
-
-
-
-
+    return test_prediction, crps, loss, params

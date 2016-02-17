@@ -15,7 +15,7 @@ valid_stream = ServerDataStream(('cases','sax_features','targets'), False, port=
 input_var = tensor.tensor4('sax_features')
 target_var = tensor.matrix('targets')
 
-from models.m7x2DCNN import get_model
+from models.m2x3DCNN_LSTM import get_model
 prediction, crps, loss, params = get_model(input_var, target_var)
 
 loss.name = 'loss'
