@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from lasagne.regularization import regularize_layer_params, l2
 from lasagne.layers import InputLayer, DropoutLayer, DenseLayer, batch_norm, get_output, ConcatLayer, LSTMLayer, get_all_params, DimshuffleLayer
-from lasagne.nonlinearities import leaky_rectify, softmax
+from lasagne.nonlinearities import leaky_rectify, softmax, sigmoid, linear
 from lasagne.objectives import squared_error
 from lasagne.updates import nesterov_momentum
 from lasagne.layers.dnn import Conv3DDNNLayer, MaxPool3DDNNLayer
@@ -41,11 +41,11 @@ def get_model(input_var, target_var):
     layer_9         = DropoutLayer(layer_8, p=0.25)
 
     # Output Layer
-    layer_hidden         = DenseLayer(layer_flatten, 500, nonlinearity=sigmoid)
+    layer_hidden         = DenseLayer(layer_9, 500, nonlinearity=sigmoid)
     layer_prediction     = DenseLayer(layer_hidden, 2, nonlinearity=linear)
 
     # Loss
-    prediction           = get_output(layer_output) 
+    prediction           = get_output(layer_prediction) 
     loss                 = squared_error(prediction, target_var)
     loss                 = loss.mean()
 

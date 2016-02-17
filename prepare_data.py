@@ -5,8 +5,6 @@ import numpy
 import dicom
 from fuel.datasets.hdf5 import H5PYDataset
 
-import matplotlib.pyplot as plt
-
 
 def get_features(root_path):
    """Get path to all the frame in view SAX and contain complete features"""
