@@ -41,14 +41,19 @@ def get_model():
     layer_4         = batch_norm(Conv3DDNNLayer(incoming=layer_3, num_filters=128, filter_size=(3,3,3), stride=(1,3,3), pad='same', nonlinearity=leaky_rectify, W=Orthogonal()))
     layer_5         = MaxPool3DDNNLayer(layer_4, pool_size=(1, 2, 2), stride=(1, 2, 2), pad=(0, 1, 1))
     layer_6         = DropoutLayer(layer_5, p=0.25)
+
+    # Convolution then batchNormalisation then activation layer, then zero padding layer followed by a dropout layer
+    layer_7         = batch_norm(Conv3DDNNLayer(incoming=layer_6, num_filters=256, filter_size=(3,3,3), stride=(1,3,3), pad='same', nonlinearity=leaky_rectify, W=Orthogonal()))
+    layer_8         = MaxPool3DDNNLayer(layer_7, pool_size=(1, 2, 2), stride=(1, 2, 2), pad=(0, 1, 1))
+    layer_9         = DropoutLayer(layer_8, p=0.25)
     
     # Recurrent layer
-    layer_7         = DimshuffleLayer(layer_6, (0,2,1,3,4))
-    layer_8         = LSTMLayer(layer_7, num_units=612, hid_init=Orthogonal(), only_return_final=False)
+    layer_10         = DimshuffleLayer(layer_9, (0,2,1,3,4))
+    layer_11         = LSTMLayer(layer_10, num_units=612, hid_init=Orthogonal(), only_return_final=False)
 
     # Output Layer
-    layer_systole    = DenseLayer(layer_8, 600, nonlinearity=leaky_rectify, W=Orthogonal())
-    layer_diastole   = DenseLayer(layer_8, 600, nonlinearity=leaky_rectify, W=Orthogonal())
+    layer_systole    = DenseLayer(layer_11, 600, nonlinearity=leaky_rectify, W=Orthogonal())
+    layer_diastole   = DenseLayer(layer_11, 600, nonlinearity=leaky_rectify, W=Orthogonal())
     layer_systole_1  = DropoutLayer(layer_systole, p=0.3)
     layer_diastole_1 = DropoutLayer(layer_diastole, p=0.3)
 
