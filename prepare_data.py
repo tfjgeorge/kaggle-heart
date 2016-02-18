@@ -3,6 +3,8 @@ import h5py
 from fuel.converters.base import progress_bar
 import numpy
 import dicom
+from PIL import Image
+import math
 from fuel.datasets.hdf5 import H5PYDataset
 
 
@@ -39,8 +41,19 @@ def get_data(lst,preproc):
        img = f.pixel_array
        dst_path = path.rsplit(".", 1)[0] + ".64x64.jpg"
        # scipy.misc.imsave(dst_path, img)
+
+       # resize to 70 px imgs
+       original_height, original_width = img.shape[-2:]
+       multiplier = max(70./ original_width, 70. / original_height)
+
+       width = int(math.ceil(original_width * multiplier))
+       height = int(math.ceil(original_height * multiplier))
+
+       im = Image.fromarray(img.astype('int16'))
+       im = numpy.array(im.resize((width, height))).astype('int16')
+
        result.append(dst_path)
-       data.append(img)
+       data.append(im)
    return [data,result]
 
 labels = get_label_map("./data_kaggle/train.csv")
