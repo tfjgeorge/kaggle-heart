@@ -2,6 +2,7 @@ from fuel.streams import ServerDataStream
 import theano
 from theano import tensor
 from blocks.extensions import Printing, Timing
+from blocks.extensions.saveload import Checkpoint
 from blocks.extensions.monitoring import TrainingDataMonitoring, DataStreamMonitoring
 from blocks.algorithms import GradientDescent, Adam
 from blocks.main_loop import MainLoop
@@ -15,7 +16,7 @@ valid_stream = ServerDataStream(('cases','sax_features','targets'), False, port=
 input_var = tensor.tensor4('sax_features')
 target_var = tensor.matrix('targets')
 
-from models.m7x3DCNN import get_model
+from models.m7x3DCNN_LSTM import get_model
 prediction, crps, loss, params = get_model(input_var, target_var)
 
 loss.name = 'loss'
@@ -36,7 +37,7 @@ extensions = [
 	DataStreamMonitoring(variables=[crps], data_stream=valid_stream, prefix="valid"),
 	Plot('%s %s @ %s' % ('test1', datetime.datetime.now(), socket.gethostname()), channels=[['loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
 	Printing(),
-	# Checkpoint('train')
+	Checkpoint('train')
 ]
 
 main_loop = MainLoop(data_stream=train_stream, algorithm=algorithm,

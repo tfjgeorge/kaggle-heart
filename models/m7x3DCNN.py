@@ -20,7 +20,7 @@ def center_normalize(x):
 def get_model(input_var, target_var):
 
     # input layer with unspecified batch size
-    layer_input     = InputLayer(shape=(None, 30, 64, 64), input_var=input_var) #InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
+    layer_input     = InputLayer(shape=(None, 30, 80, 80), input_var=input_var) #InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
     layer_0         = DimshuffleLayer(layer_input, (0, 'x', 1, 2, 3))
 
     # Z-score?
