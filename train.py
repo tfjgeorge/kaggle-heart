@@ -8,38 +8,62 @@ from blocks.algorithms import GradientDescent, Adam
 from blocks.main_loop import MainLoop
 from blocks_extras.extensions.plot import Plot
 import datetime
+import sys
 import socket
 
-train_stream = ServerDataStream(('cases','sax_features','targets'), False, hwm=10)
-valid_stream = ServerDataStream(('cases','sax_features','targets'), False, hwm=10, port=5558)
 
-input_var = tensor.tensor4('sax_features')
-target_var = tensor.matrix('targets')
 
-from models.m7x2DCNN import get_model
-prediction, crps, loss, params = get_model(input_var, target_var)
 
-loss.name = 'loss'
-crps.name = 'crps'
+def run(get_model, model_name):
+	train_stream = ServerDataStream(('cases','sax_features','targets'), False, hwm=10)
+	valid_stream = ServerDataStream(('cases','sax_features','targets'), False, hwm=10, port=5558)
 
-algorithm = GradientDescent(
-	cost=loss,
-	parameters=params,
-	step_rule=Adam(),
-	on_unused_sources='ignore'
-)
+	input_var = tensor.tensor4('sax_features')
+	target_var = tensor.matrix('targets')
 
-host_plot = 'http://localhost:5006'
+	prediction, crps, loss, params = get_model(input_var, target_var)
 
-extensions = [
-	Timing(),
-	TrainingDataMonitoring([loss], after_epoch=True),
-	DataStreamMonitoring(variables=[crps], data_stream=valid_stream, prefix="valid"),
-	Plot('%s %s @ %s' % ('test1', datetime.datetime.now(), socket.gethostname()), channels=[['loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
-	Printing(),
-	Checkpoint('train')
-]
+	loss.name = 'loss'
+	crps.name = 'crps'
 
-main_loop = MainLoop(data_stream=train_stream, algorithm=algorithm,
-                     extensions=extensions)
-main_loop.run()
+	algorithm = GradientDescent(
+		cost=loss,
+		parameters=params,
+		step_rule=Adam(),
+		on_unused_sources='ignore'
+	)
+
+	host_plot = 'http://localhost:5006'
+
+	extensions = [
+		Timing(),
+		TrainingDataMonitoring([loss], after_epoch=True),
+		DataStreamMonitoring(variables=[crps], data_stream=valid_stream, prefix="valid"),
+		Plot('%s %s @ %s' % (model_name, datetime.datetime.now(), socket.gethostname()), channels=[['loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
+		Printing(),
+		Checkpoint('train')
+	]
+
+	main_loop = MainLoop(data_stream=train_stream, algorithm=algorithm,
+	                     extensions=extensions)
+	main_loop.run()
+
+
+
+if __name__ == "__main__":
+
+	if len(sys.argv) != 2:
+		print('Usage: python train.py path/to/model.py')
+		exit()
+
+	# prepare path for import
+	path = sys.argv[-1]
+	if path[-3:] == '.py':
+		path = path[:-3]
+	path = path.replace('/','.')
+	
+	# import right model
+	get_model = __import__(path, globals(), locals(), ['get_model']).get_model
+
+	# run the training
+	run(get_model, path.split('.')[-1])
