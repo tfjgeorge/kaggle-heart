@@ -12,6 +12,7 @@ train_set = H5PYDataset(
 	'./data_kaggle/kaggle_heart.hdf5',
 	which_sets=('train',),
 	subset=slice(0, 4992),
+	load_in_memory=True
 )
 
 stream = DataStream.default_stream(
@@ -20,13 +21,10 @@ stream = DataStream.default_stream(
 )
 
 
-downscaled_stream = RescaleMinDimension(
-	stream, 70)
-
 cropped_stream = RandomFixedSizeCrop(
-    downscaled_stream, (64, 64), which_sources=('sax_features',))
+    stream, (64, 64), which_sources=('sax_features',))
 
 float_stream = ScaleAndShift(cropped_stream, 1./1024, 0, which_sources=('sax_features',))
 float32_stream = Cast(float_stream, 'floatX', which_sources=('sax_features',))
 
-start_server(float32_stream)
+start_server(float32_stream, hwm=100)
