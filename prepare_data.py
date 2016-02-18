@@ -54,7 +54,7 @@ def get_data(lst,preproc):
 
        result.append(dst_path)
        data.append(im)
-   return [data,result]
+   return [data,result], multiplier
 
 labels = get_label_map("./data_kaggle/train.csv")
 train_features = get_features('./data_kaggle/train')
@@ -72,6 +72,7 @@ hdf_features = h5file.create_dataset('sax_features', (n_total,), dtype=dtype)
 hdf_shapes = h5file.create_dataset('sax_features_shapes', (n_total, 3), dtype='int32')
 hdf_cases = h5file.create_dataset('cases', (n_total, 1), dtype='int32')
 hdf_labels = h5file.create_dataset('targets', (n_total, 2), dtype='float32')
+hdf_mult = h5file.create_dataset('multiplier', (n_total, 1), dtype='float32')
 
 # Attach shape annotations and scales
 hdf_features.dims.create_scale(hdf_shapes, 'shapes')
@@ -90,17 +91,20 @@ hdf_labels.dims[0].label = 'batch'
 hdf_labels.dims[1].label = 'index'
 hdf_cases.dims[0].label = 'batch'
 hdf_cases.dims[1].label = 'index'
+hdf_mult.dims[0].label = 'batch'
+hdf_mult.dims[1].label = 'index'
 
 ### loading train
 i = 0
 
 with progress_bar('train ', n_examples_train) as bar:
     for sequence in train_features:
-        d = get_data(sequence, lambda x: x)
+        d, multiplier = get_data(sequence, lambda x: x)
         images = numpy.array(d[0])
 
         hdf_features[i] = images.flatten().astype(numpy.dtype('uint16'))
         hdf_shapes[i] = images.shape
+        hdf_mult[i] = multiplier
 
         path = d[1][1].split('/')
         hdf_labels[i] = numpy.array(labels[int(path[3])])
