@@ -10,8 +10,8 @@ from blocks_extras.extensions.plot import Plot
 import datetime
 import socket
 
-train_stream = ServerDataStream(('cases','sax_features','targets'), False)
-valid_stream = ServerDataStream(('cases','sax_features','targets'), False, port=5558)
+train_stream = ServerDataStream(('cases','sax_features','targets'), False, hwm=10)
+valid_stream = ServerDataStream(('cases','sax_features','targets'), False, hwm=10, port=5558)
 
 input_var = tensor.tensor4('sax_features')
 target_var = tensor.matrix('targets')

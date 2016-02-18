@@ -27,4 +27,4 @@ cropped_stream = RandomFixedSizeCrop(
 float_stream = ScaleAndShift(cropped_stream, 1./1024, 0, which_sources=('sax_features',))
 float32_stream = Cast(float_stream, 'floatX', which_sources=('sax_features',))
 
-start_server(float32_stream, hwm=100)
+start_server(float32_stream, hwm=10)
