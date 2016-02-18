@@ -20,7 +20,7 @@ def center_normalize(x):
 def get_model(input_var, target_var):
 
     # input layer with unspecified batch size
-    layer_input     = InputLayer(shape=(None, 30, 80, 80), input_var=input_var) #InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
+    layer_input     = InputLayer(shape=(None, 30, 64, 64), input_var=input_var) #InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
     layer_0         = DimshuffleLayer(layer_input, (0, 'x', 1, 2, 3))
 
     # Z-score?
@@ -55,9 +55,6 @@ def get_model(input_var, target_var):
     loss                 = squared_error(prediction, target_var)
     loss                 = loss.mean()
 
-    # crps estimate
-    crps                 = T.abs_(prediction - target_var).mean()/600
-
     #Updates : Stochastic Gradient Descent (SGD) with Nesterov momentum
     params               = get_all_params(layer_prediction, trainable=True)
 
@@ -66,5 +63,8 @@ def get_model(input_var, target_var):
     test_prediction      = get_output(layer_prediction, deterministic=True)
     test_loss            = squared_error(test_prediction, target_var)
     test_loss            = test_loss.mean()
+
+    # crps estimate
+    crps                 = T.abs_(test_prediction - target_var).mean()/600
 
     return test_prediction, crps, loss, params

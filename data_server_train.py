@@ -11,20 +11,20 @@ import numpy
 train_set = H5PYDataset(
 	'./data_kaggle/kaggle_heart.hdf5',
 	which_sets=('train',),
-	subset=slice(0, 5000),
+	subset=slice(0, 4992),
 )
 
 stream = DataStream.default_stream(
     train_set,
-    iteration_scheme=ShuffledScheme(train_set.num_examples, 10)
+    iteration_scheme=ShuffledScheme(train_set.num_examples, 32)
 )
 
 
 downscaled_stream = RescaleMinDimension(
-	stream, 90)
+	stream, 70)
 
 cropped_stream = RandomFixedSizeCrop(
-    downscaled_stream, (80, 80), which_sources=('sax_features',))
+    downscaled_stream, (64, 64), which_sources=('sax_features',))
 
 float_stream = ScaleAndShift(cropped_stream, 1./1024, 0, which_sources=('sax_features',))
 float32_stream = Cast(float_stream, 'floatX', which_sources=('sax_features',))

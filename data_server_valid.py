@@ -21,10 +21,10 @@ stream = DataStream.default_stream(
 
 
 downscaled_stream = RescaleMinDimension(
-	stream, 90)
+	stream, 70)
 
 cropped_stream = RandomFixedSizeCrop(
-    downscaled_stream, (80, 80), which_sources=('sax_features',))
+    downscaled_stream, (64, 64), which_sources=('sax_features',))
 
 float_stream = ScaleAndShift(cropped_stream, 1./1024, 0, which_sources=('sax_features',))
 float32_stream = Cast(float_stream, 'floatX', which_sources=('sax_features',))
