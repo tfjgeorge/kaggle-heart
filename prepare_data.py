@@ -131,7 +131,7 @@ with progress_bar('submit', n_examples_submit) as bar:
 
 # Add the labels
 split_dict = {}
-sources = ['sax_features', 'targets', 'cases']
+sources = ['sax_features', 'targets', 'cases', 'multiplier']
 for name, slice_ in zip(['train', 'submit'],
                         [(0, n_examples_train), (n_examples_train, n_total)]):
     split_dict[name] = dict(zip(sources, [slice_] * len(sources)))

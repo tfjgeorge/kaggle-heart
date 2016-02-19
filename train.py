@@ -10,17 +10,18 @@ from blocks_extras.extensions.plot import Plot
 import datetime
 import sys
 import socket
-
+import theano.tensor as T
 
 
 
 def run(get_model, model_name):
-	train_stream = ServerDataStream(('cases','sax_features','targets'), False, hwm=10)
-	valid_stream = ServerDataStream(('cases','sax_features','targets'), False, hwm=10, port=5558)
+	train_stream = ServerDataStream(('cases','multiplier','sax_features','targets'), False, hwm=10)
+	valid_stream = ServerDataStream(('cases','multiplier','sax_features','targets'), False, hwm=10, port=5558)
 
 	input_var = tensor.tensor4('sax_features')
 	target_var = tensor.matrix('targets')
 	multiply_var = tensor.matrix('multiplier')
+	multiply_var = T.addbroadcast(multiply_var, 1)
 
 	prediction, crps, loss, params = get_model(input_var, target_var, multiply_var)
 
