@@ -1,10 +1,10 @@
 ## m7x3DCNN_alternatetx
 
-**Spécificité modèle** : On alterne les convolutions dans le sens de l'image et dans le sens du temps
-**Lancé** :  19/2/16
-**Notes** :  Le data augmentation a changé au milieu
-**Commit**:  
-**Score 20 epochs**: 
+- **Spécificité modèle** : On alterne les convolutions dans le sens de l'image et dans le sens du temps
+- **Lancé** :  19/2/16
+- **Notes** :  Le data augmentation a changé au milieu, il y avait une erreur dans le multiply de randomdownscale
+- **Commit**:  https://github.com/tfjgeorge/kaggle-heart/commit/02f89b74c6aea053c0383453dbd3eb059fc80393
+- **Score 20 epochs**: 
 
 ```
 Training status:
