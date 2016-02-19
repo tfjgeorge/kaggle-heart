@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from lasagne.regularization import regularize_layer_params, l2
-from lasagne.layers import InputLayer, DropoutLayer, DenseLayer,  get_output, ConcatLayer, LSTMLayer, get_all_params, DimshuffleLayer, FlattenLaye
+from lasagne.layers import InputLayer, DropoutLayer, DenseLayer,  get_output, ConcatLayer, LSTMLayer, get_all_params, DimshuffleLayer, FlattenLayer
 from lasagne.nonlinearities import rectify, softmax, sigmoid, linear
 from lasagne.objectives import squared_error
 from lasagne.updates import nesterov_momentum
