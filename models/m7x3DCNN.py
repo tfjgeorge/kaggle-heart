@@ -17,7 +17,7 @@ def center_normalize(x):
     return (x - K.mean(x)) / K.std(x)
 
 
-def get_model(input_var, target_var):
+def get_model(input_var, target_var, multiply_var):
 
     # input layer with unspecified batch size
     layer_input     = InputLayer(shape=(None, 30, 64, 64), input_var=input_var) #InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
@@ -51,7 +51,7 @@ def get_model(input_var, target_var):
     layer_prediction     = DenseLayer(layer_hidden, 2, nonlinearity=linear)
 
     # Loss
-    prediction           = get_output(layer_prediction) 
+    prediction           = get_output(layer_prediction) * multiply_var
     loss                 = squared_error(prediction, target_var)
     loss                 = loss.mean()
 
@@ -60,7 +60,7 @@ def get_model(input_var, target_var):
 
     # Create a loss expression for validation/testing. The crucial difference
     # here is that we do a deterministic forward pass through the network, disabling dropout layers.
-    test_prediction      = get_output(layer_prediction, deterministic=True)
+    test_prediction      = get_output(layer_prediction, deterministic=True) * multiply_var
     test_loss            = squared_error(test_prediction, target_var)
     test_loss            = test_loss.mean()
 
