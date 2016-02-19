@@ -51,16 +51,15 @@ def get_model(input_var, target_var, multiply_var):
     layer_prediction     = DenseLayer(layer_hidden, 2, nonlinearity=linear)
 
     # Loss
-    prediction           = get_output(layer_prediction) / multiply_var**2
-    loss                 = squared_error(prediction, target_var)
-    loss                 = loss.mean()
+    prediction           = get_output(layer_prediction) / multiply_var**3
+    loss                 = T.abs_(prediction-target_var).mean()
 
     #Updates : Stochastic Gradient Descent (SGD) with Nesterov momentum
     params               = get_all_params(layer_prediction, trainable=True)
 
     # Create a loss expression for validation/testing. The crucial difference
     # here is that we do a deterministic forward pass through the network, disabling dropout layers.
-    test_prediction      = get_output(layer_prediction, deterministic=True) / multiply_var**2
+    test_prediction      = get_output(layer_prediction, deterministic=True) / multiply_var**3
     test_loss            = squared_error(test_prediction, target_var)
     test_loss            = test_loss.mean()
 
