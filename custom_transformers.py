@@ -54,10 +54,9 @@ class RandomDownscale(Transformer):
         if example.ndim > 3 or example.ndim < 2:
             raise NotImplementedError
         original_height, original_width = example.shape[-2:]
-        multiplier = max(float(self.min_dimension_size) / original_width, float(self.min_dimension_size) / original_height)
 
         new_size = random.randint(self.min_dimension_size, original_width)
-        multiplier = float(new_size/original_width)
+        multiplier = float(new_size)/original_width
 
         dt = example.dtype
         target = numpy.zeros((example.shape[0], new_size, new_size))
