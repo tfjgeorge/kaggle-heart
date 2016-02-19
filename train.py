@@ -20,8 +20,9 @@ def run(get_model, model_name):
 
 	input_var = tensor.tensor4('sax_features')
 	target_var = tensor.matrix('targets')
+	multiply_var = tensor.matrix('multiplier')
 
-	prediction, crps, loss, params = get_model(input_var, target_var)
+	prediction, crps, loss, params = get_model(input_var, target_var, multiply_var)
 
 	loss.name = 'loss'
 	crps.name = 'crps'
