@@ -51,7 +51,7 @@ def get_model(input_var, target_var, multiply_var):
     layer_prediction     = DenseLayer(layer_hidden, 2, nonlinearity=linear)
 
     # Loss
-    prediction           = get_output(layer_prediction) * multiply_var
+    prediction           = get_output(layer_prediction) / multiply_var
     loss                 = squared_error(prediction, target_var)
     loss                 = loss.mean()
 
@@ -60,7 +60,7 @@ def get_model(input_var, target_var, multiply_var):
 
     # Create a loss expression for validation/testing. The crucial difference
     # here is that we do a deterministic forward pass through the network, disabling dropout layers.
-    test_prediction      = get_output(layer_prediction, deterministic=True) * multiply_var
+    test_prediction      = get_output(layer_prediction, deterministic=True) / multiply_var
     test_loss            = squared_error(test_prediction, target_var)
     test_loss            = test_loss.mean()
 
