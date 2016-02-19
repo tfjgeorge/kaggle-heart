@@ -8,6 +8,7 @@ from blocks.algorithms import GradientDescent, Adam
 from blocks.main_loop import MainLoop
 from blocks_extras.extensions.plot import Plot
 import datetime
+import time
 import sys
 import socket
 import theano.tensor as T
@@ -41,7 +42,7 @@ def run(get_model, model_name):
 		Timing(),
 		TrainingDataMonitoring([loss], after_epoch=True),
 		DataStreamMonitoring(variables=[crps, loss], data_stream=valid_stream, prefix="valid"),
-		Plot('%s %s' % (model_name, datetime.date.today()), channels=[['loss','valid_loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
+		Plot('%s %s %s' % (model_name, datetime.date.today(), time.strftime('%H:%M')), channels=[['loss','valid_loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
 		Printing(),
 		Checkpoint('train'),
 		FinishAfter(after_n_epochs=20)
