@@ -56,7 +56,7 @@ class RandomDownscale(Transformer):
         original_height, original_width = example.shape[-2:]
 
         new_size = random.randint(self.min_dimension_size, original_width)
-        multiplier = float(original_width)/new_size
+        multiplier = float(new_size)/width
 
         dt = example.dtype
         target = numpy.zeros((example.shape[0], new_size, new_size))
