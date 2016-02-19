@@ -1,7 +1,7 @@
 from fuel.streams import ServerDataStream
 import theano
 from theano import tensor
-from blocks.extensions import Printing, Timing
+from blocks.extensions import Printing, Timing, FinishAfter
 from blocks.extensions.saveload import Checkpoint
 from blocks.extensions.monitoring import TrainingDataMonitoring, DataStreamMonitoring
 from blocks.algorithms import GradientDescent, Adam
@@ -43,7 +43,8 @@ def run(get_model, model_name):
 		DataStreamMonitoring(variables=[crps], data_stream=valid_stream, prefix="valid"),
 		Plot('%s %s' % (model_name, datetime.date.today()), channels=[['loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
 		Printing(),
-		Checkpoint('train')
+		Checkpoint('train'),
+		FinishAfter(after_n_epochs=20)
 	]
 
 	main_loop = MainLoop(data_stream=train_stream, algorithm=algorithm,
