@@ -19,7 +19,7 @@ train_set = H5PYDataset(
 
 stream = DataStream.default_stream(
     train_set,
-    iteration_scheme=ShuffledScheme(train_set.num_examples, 32)
+    iteration_scheme=ShuffledScheme(train_set.num_examples, 16)
 )
 
 resized_stream = RandomDownscale(stream, 64)
