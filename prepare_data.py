@@ -116,11 +116,12 @@ with progress_bar('train ', n_examples_train) as bar:
 ### loading submit
 with progress_bar('submit', n_examples_submit) as bar:
     for sequence in submit_features:
-        d = get_data(sequence, lambda x: x)
+        d, multiplier = get_data(sequence, lambda x: x)
         images = numpy.array(d[0])
 
         hdf_features[i] = images.flatten().astype(numpy.dtype('uint16'))
         hdf_shapes[i] = images.shape
+        hdf_mult[i] = multiplier
 
         path = d[1][1].split('/')
         hdf_cases[i] = int(path[3])
