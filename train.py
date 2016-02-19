@@ -40,8 +40,8 @@ def run(get_model, model_name):
 	extensions = [
 		Timing(),
 		TrainingDataMonitoring([loss], after_epoch=True),
-		DataStreamMonitoring(variables=[crps], data_stream=valid_stream, prefix="valid"),
-		Plot('%s %s' % (model_name, datetime.date.today()), channels=[['loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
+		DataStreamMonitoring(variables=[crps, loss], data_stream=valid_stream, prefix="valid"),
+		Plot('%s %s' % (model_name, datetime.date.today()), channels=[['loss','valid_loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
 		Printing(),
 		Checkpoint('train'),
 		FinishAfter(after_n_epochs=20)
