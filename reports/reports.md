@@ -30,11 +30,11 @@ Log records from the iteration 6361:
 
 ## m7x3DCNN_nobatchnorm 
 
-**Spécificité modèle** : Pas de batch normalization, le multiplier est mis au carré
-**Lancé** :  19/2/16
-**Notes** :  
-**Commit**: https://github.com/tfjgeorge/kaggle-heart/commit/798c51382c8af23863825b4bf5cc04efacd1eefc
-**Score 20 epochs**: 
+- **Spécificité modèle** : Pas de batch normalization, le multiplier est mis au carré
+- **Lancé** :  19/2/16
+- **Notes** :  Erreur dans un custom transformers, ce qui fait que ce training est bon à jeter...
+- **Commit**: https://github.com/tfjgeorge/kaggle-heart/commit/798c51382c8af23863825b4bf5cc04efacd1eefc
+- **Score 20 epochs**: 
 
 ```
 Training status:
