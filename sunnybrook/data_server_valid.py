@@ -9,11 +9,10 @@ from custom_transformers_sunnybrook import RandomDownscale, RandomRotate, Cast, 
 import numpy
 import math
 
-
 train_set = H5PYDataset(
 	'data_sunnybrook/sunnybrook_heart.hdf5',
 	which_sets=('train',),
-	subset=slice(0, 40),
+	subset=slice(40, 45),
 	load_in_memory=True,
 )
 
@@ -35,10 +34,5 @@ float32_stream = Cast(float_stream, 'floatX')
 
 #a = float32_stream.get_epoch_iterator()
 #b = a.next()
-# print(numpy.std(b[1]))
-# print(numpy.mean(b[1]))
 
-start_server(float32_stream, hwm=10)
-
-
-# index 17 problem
+start_server(float32_stream, port=5558, hwm=10)
