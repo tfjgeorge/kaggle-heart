@@ -16,8 +16,8 @@ import theano.tensor as T
 
 
 def run(get_model, model_name):
-	train_stream = ServerDataStream(('image_features', 'image_targets', 'cases', 'multiplier'), False, hwm=10)
-	valid_stream = ServerDataStream(('image_features', 'image_targets', 'cases', 'multiplier'), False, hwm=10, port=5558)
+	train_stream = ServerDataStream(('cases', 'image_features', 'image_targets', 'multiplier'), False, hwm=10)
+	valid_stream = ServerDataStream(('cases', 'image_features', 'image_targets', 'multiplier'), False, hwm=10, port=5558)
 
 	input_var  = tensor.tensor4('image_features')
 	target_var = tensor.tensor4('image_targets')
