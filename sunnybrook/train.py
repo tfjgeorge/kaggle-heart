@@ -24,10 +24,9 @@ def run(get_model, model_name):
 	multiply_var = tensor.matrix('multiplier')
 	multiply_var = T.addbroadcast(multiply_var, 1)
 
-	prediction, crps, loss, params = get_model(input_var, target_var, multiply_var)
+	test_prediction, prediction, loss, params = get_model(input_var, target_var, multiply_var)
 
 	loss.name = 'loss'
-	crps.name = 'crps'
 
 	algorithm = GradientDescent(
 		cost=loss,
@@ -41,8 +40,8 @@ def run(get_model, model_name):
 	extensions = [
 		Timing(),
 		TrainingDataMonitoring([loss], after_epoch=True),
-		DataStreamMonitoring(variables=[crps, loss], data_stream=valid_stream, prefix="valid"),
-		Plot('%s %s %s' % (model_name, datetime.date.today(), time.strftime('%H:%M')), channels=[['loss','valid_loss'], ['valid_crps']], after_epoch=True, server_url=host_plot),
+		DataStreamMonitoring(variables=[loss], data_stream=valid_stream, prefix="valid"),
+		Plot('%s %s %s' % (model_name, datetime.date.today(), time.strftime('%H:%M')), channels=[['loss','valid_loss']], after_epoch=True, server_url=host_plot),
 		Printing(),
 		Checkpoint('train'),
 		FinishAfter(after_n_epochs=20)
