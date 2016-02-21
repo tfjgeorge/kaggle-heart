@@ -9,7 +9,6 @@ from custom_transformers_sunnybrook import RandomDownscale, RandomRotate, Cast, 
 import numpy
 import math
 
-
 train_set = H5PYDataset(
 	'data_sunnybrook/sunnybrook_heart.hdf5',
 	which_sets=('train',),
