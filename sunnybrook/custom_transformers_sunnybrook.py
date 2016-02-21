@@ -214,8 +214,8 @@ class Normalize(Transformer):
         for case, images, targets, multiplier in zip(batch[0], batch[1], batch[2], batch[3]):
             output[0].append(case)
             output[2].append(targets)
-            limited_imgs = self._example_transform(images) 
-            output[1].append(limited_imgs)
+            normalised_imgs = self._example_transform(images) 
+            output[1].append(normalised_imgs)
             output[3].append(multiplier)
         return output
 
