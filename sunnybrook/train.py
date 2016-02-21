@@ -4,7 +4,7 @@ from theano import tensor
 from blocks.extensions import Printing, Timing, FinishAfter
 from blocks.extensions.saveload import Checkpoint
 from blocks.extensions.monitoring import TrainingDataMonitoring, DataStreamMonitoring
-from blocks.algorithms import GradientDescent, Adam
+from blocks.algorithms import AdaGrad, GradientDescent, Adam
 from blocks.main_loop import MainLoop
 from blocks_extras.extensions.plot import Plot
 import datetime
@@ -31,7 +31,7 @@ def run(get_model, model_name):
 	algorithm = GradientDescent(
 		cost=loss,
 		parameters=params,
-		step_rule=Adam(),
+		step_rule=AdaGrad(),
 		on_unused_sources='ignore'
 	)
 
@@ -44,7 +44,7 @@ def run(get_model, model_name):
 		Plot('%s %s %s' % (model_name, datetime.date.today(), time.strftime('%H:%M')), channels=[['loss','valid_loss']], after_epoch=True, server_url=host_plot),
 		Printing(),
 		Checkpoint('train'),
-		FinishAfter(after_n_epochs=20)
+		#FinishAfter(after_n_epochs=20)
 	]
 
 	main_loop = MainLoop(data_stream=train_stream, algorithm=algorithm,
