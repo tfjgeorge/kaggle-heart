@@ -1,1 +1,6 @@
 *.pyc
+data*
+Lasagne
+fuel
+blocks-extras
+train
