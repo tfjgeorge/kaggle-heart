@@ -4,7 +4,8 @@ from theano import tensor
 from blocks.extensions import Printing, Timing, FinishAfter
 from blocks.extensions.saveload import Checkpoint
 from blocks.extensions.monitoring import TrainingDataMonitoring, DataStreamMonitoring
-from blocks.algorithms import AdaGrad, GradientDescent, Adam
+from blocks.graph import ComputationGraph
+from blocks.algorithms import AdaGrad, GradientDescent, Adam, Scale, RMSProp
 from blocks.main_loop import MainLoop
 from blocks_extras.extensions.plot import Plot
 import datetime
@@ -12,8 +13,7 @@ import time
 import sys
 import socket
 import theano.tensor as T
-
-
+import numpy
 
 def run(get_model, model_name):
 	train_stream = ServerDataStream(('cases', 'image_features', 'image_targets', 'multiplier'), False, hwm=10)
@@ -28,10 +28,14 @@ def run(get_model, model_name):
 
 	loss.name = 'loss'
 
+	valid_error = T.neq((test_prediction[:,0,:,:,:]>0.5)*1., target_var).mean()
+	valid_error.name = 'error'
+
 	algorithm = GradientDescent(
 		cost=loss,
 		parameters=params,
-		step_rule=AdaGrad(),
+		#step_rule=Scale(0.01),
+		step_rule=Adam(),
 		on_unused_sources='ignore'
 	)
 
@@ -40,16 +44,19 @@ def run(get_model, model_name):
 	extensions = [
 		Timing(),
 		TrainingDataMonitoring([loss], after_epoch=True),
-		DataStreamMonitoring(variables=[loss], data_stream=valid_stream, prefix="valid"),
-		Plot('%s %s %s' % (model_name, datetime.date.today(), time.strftime('%H:%M')), channels=[['loss','valid_loss']], after_epoch=True, server_url=host_plot),
+		DataStreamMonitoring(variables=[loss, valid_error], data_stream=valid_stream, prefix="valid"),
+		Plot('%s %s %s' % (model_name, datetime.date.today(), time.strftime('%H:%M')), channels=[['loss','valid_loss'],['valid_error']], after_epoch=True, server_url=host_plot),
 		Printing(),
-		Checkpoint('train'),
-		#FinishAfter(after_n_epochs=20)
+		# Checkpoint('train'),
+		FinishAfter(after_n_epochs=50)
 	]
 
 	main_loop = MainLoop(data_stream=train_stream, algorithm=algorithm,
 	                     extensions=extensions)
 	main_loop.run()
+
+	cg = ComputationGraph(prediction)
+	numpy.savez('best_weights.npz', [param.get_value() for param in cg.shared_variables])
 
 
 
