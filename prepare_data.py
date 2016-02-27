@@ -268,3 +268,6 @@ h5file.attrs['split'] = H5PYDataset.create_split_array(split_dict)
 
 h5file.flush()
 h5file.close()
+
+# n_total = 691
+# number_train = 494 (counting valid set)
