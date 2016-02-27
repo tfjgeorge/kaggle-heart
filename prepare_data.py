@@ -171,7 +171,7 @@ with progress_bar('train', n_examples_train) as bar:
         case_index    = int(m.group(1))
         if case_index != index:
           sax_indexes.append(list(numpy.unique(numpy.array(sax_indexes_tmp))))
-          cases_output.append(case_index)
+          cases_output.append(index)
           images_output.append(output_ind)
           output_ind   = []
           sax_indexes_tmp = []
@@ -225,7 +225,7 @@ with progress_bar('submit', n_examples_submit) as bar:
         case_index    = int(m.group(1))
         if case_index != index:
           sax_indexes.append(list(numpy.unique(numpy.array(sax_indexes_tmp))))
-          cases_output.append(case_index)
+          cases_output.append(index)
           images_output.append(output_ind)
           output_ind   = []
           sax_indexes_tmp = []
