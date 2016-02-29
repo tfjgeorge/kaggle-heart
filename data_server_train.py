@@ -5,7 +5,7 @@ from fuel.server import start_server
 from fuel.transformers import Flatten, ScaleAndShift
 from fuel.transformers.image import  Random2DRotation
 from fuel.transformers.video import RescaleMinDimension
-from custom_transformers_kaggle import RandomLimit, RandomFixedSizeCrop, Normalize, Cast, RandomRotate, ZeroPadding
+from custom_transformers_kaggle import RandomLimit, RandomFixedSizeCrop, Normalize, Cast, RandomRotate, ZeroPadding, RandomDownscale
 import math
 import math
 
@@ -29,39 +29,11 @@ stream = DataStream.default_stream(
     iteration_scheme=ShuffledScheme(train_set.num_examples, 10)
 )
 
-cropped_stream = RandomFixedSizeCrop(stream, (64,64))
-#rotated_stream = RandomRotate(cropped_stream, math.pi/10)
-float_stream   = Normalize(cropped_stream)
-padded_stream  = ZeroPadding(float_stream)
-casted_stream  = Cast(padded_stream, 'floatX')
+downscaled_stream = RandomDownscale(stream, 70)
+cropped_stream    = RandomFixedSizeCrop(downscaled_stream, (64,64))
+rotated_stream    = RandomRotate(cropped_stream, math.pi/10)
+float_stream      = Normalize(cropped_stream)
+padded_stream     = ZeroPadding(float_stream)
+casted_stream     = Cast(padded_stream, 'floatX')
 
 start_server(casted_stream, hwm=10)
-
-
-
-
-
-##################################################### OLD #####################################################
-
-# train_set = H5PYDataset(
-# 	'data_kaggle/kaggle_heart.hdf5',
-# 	which_sets=('train',),
-# 	subset=slice(0, 450),
-# 	# load_in_memory=True
-# )
-
-# stream = DataStream.default_stream(
-#     train_set,
-#     iteration_scheme=ShuffledScheme(train_set.num_examples, 16)
-# )
-
-# #resized_stream = RandomDownscale(stream, 64)
-# #rotated_stream = RandomRotate(resized_stream, math.pi/10, which_sources=('sax_features',))
-
-# #cropped_stream = RandomFixedSizeCrop(
-# #    rotated_stream, (64, 64), which_sources=('sax_features',))
-# cropped_stream = stream
-# float_stream   = ScaleAndShift(cropped_stream, 1./1024, 0, which_sources=('sax_features',))
-# float32_stream = Cast(float_stream, 'floatX', which_sources=('sax_features',))
-
-# start_server(float32_stream, hwm=10)

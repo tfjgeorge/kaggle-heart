@@ -5,6 +5,67 @@ from fuel import config
 import math
 import random
 
+class RandomDownscale(Transformer):
+    """Randomly downscale a video with minimum dimension given as parameter
+    Parameters
+    ----------
+    data_stream : instance of :class:`AbstractDataStream`
+        The data stream to wrap.
+    min_dimension_size : int
+        The desired length of the smallest dimension.
+    resample : str, optional
+        Resampling filter for PIL to use to upsample any images requiring
+        it. Options include 'nearest' (default), 'bilinear', and 'bicubic'.
+        See the PIL documentation for more detailed information.
+    Notes
+    -----
+    This transformer only works with square images (width == height)
+    """
+    def __init__(self, data_stream, min_dimension_size, resample='bilinear',
+                 **kwargs):
+        self.min_dimension_size = min_dimension_size
+        try:
+            self.resample = getattr(Image, resample.upper())
+        except AttributeError:
+            raise ValueError("unknown resampling filter '{}'".format(resample))
+        kwargs.setdefault('produces_examples', data_stream.produces_examples)
+        kwargs.setdefault('axis_labels', data_stream.axis_labels)
+        super(RandomDownscale, self).__init__(data_stream, **kwargs)
+
+    def transform_batch(self, batch):
+        output = ([],[],[],[],[])
+        for case, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4]):
+            output[0].append(case)
+            output[2].append(sax)
+            rescaled_imgs, new_multiplier = self._example_transform(images) 
+            output[3].append(rescaled_imgs)
+            output[1].append(multiplier*new_multiplier)
+            output[4].append(targets)
+        return output
+
+    def transform_example(self, example):
+        return self._example_transform(example)
+
+    def _example_transform(self, example):
+        if example.ndim > 4 or example.ndim < 3:
+            raise NotImplementedError
+        depth, time, height, width = example.shape
+
+        new_size = random.randint(self.min_dimension_size, width)
+        multiplier = float(new_size)/width
+
+        dt     = example.dtype
+        target = numpy.zeros((depth, time, new_size, new_size))
+
+        for i in range(depth):
+            for j in range(time):
+    
+                im = Image.fromarray(example[i,j].astype('int16'))
+                im = numpy.array(im.resize((new_size, new_size), resample=self.resample)).astype(dt)
+
+                target[i,j,:,:] = im
+        return target, multiplier
+
 class RandomRotate(Transformer):
     """Randomly downscale a video with minimum dimension given as parameter
     Parameters
