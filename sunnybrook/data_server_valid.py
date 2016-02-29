@@ -23,16 +23,9 @@ stream = DataStream.default_stream(
 
 resized_stream = RandomDownscale(stream, 70)
 rotated_stream = RandomRotate(resized_stream, math.pi/10)
-
 cropped_stream = RandomFixedSizeCrop(resized_stream, (64, 64))
-
 limit_stream   = RandomLimit(cropped_stream, 12)
 float_stream   = Normalize(limit_stream)
-#float_stream   = ScaleAndShift(limit_stream, 1./1024, 0., which_sources=('image_features',))
 float32_stream = Cast(float_stream, 'floatX')
-
-
-#a = float32_stream.get_epoch_iterator()
-#b = a.next()
 
 start_server(float32_stream, port=5558, hwm=10)

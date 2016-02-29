@@ -21,23 +21,11 @@ stream = DataStream.default_stream(
     iteration_scheme=ShuffledScheme(train_set.num_examples, 5)
 )
 
-resized_stream = RandomDownscale(stream, 70)
-rotated_stream = RandomRotate(resized_stream, math.pi/10)
-
-cropped_stream = RandomFixedSizeCrop(resized_stream, (64, 64))
-
-limit_stream   = RandomLimit(cropped_stream, 12)
-float_stream   = Normalize(limit_stream)
-#float_stream   = ScaleAndShift(limit_stream, 1./1024, 0., which_sources=('image_features',))
-float32_stream = Cast(float_stream, 'floatX')
-
-
-#a = float32_stream.get_epoch_iterator()
-#b = a.next()
-# print(numpy.std(b[1]))
-# print(numpy.mean(b[1]))
+downscaled_stream = RandomDownscale(stream, 70)
+rotated_stream    = RandomRotate(downscaled_stream, math.pi/10)
+cropped_stream    = RandomFixedSizeCrop(rotated_stream, (64, 64))
+limit_stream      = RandomLimit(cropped_stream, 12)
+float_stream      = Normalize(limit_stream)
+float32_stream    = Cast(float_stream, 'floatX')
 
 start_server(float32_stream, hwm=10)
-
-
-# index 17 problem

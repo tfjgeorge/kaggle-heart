@@ -123,7 +123,7 @@ def number_of_cases(contour_path, case):
       nb_cases += 1
   return nb_cases
 
-def get_data(contour_path, img_path, case, resize_param=70.):
+def get_data(contour_path, img_path, case, resize_param=80.):
   contours = get_all_contours(contour_path)
   nb_cases = number_of_cases(contour_path, case)
   data, label = np.zeros([nb_cases, resize_param, resize_param]), np.zeros([nb_cases, resize_param, resize_param])

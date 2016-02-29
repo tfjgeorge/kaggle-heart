@@ -22,7 +22,7 @@ class RandomDownscale(Transformer):
     -----
     This transformer only works with square images (width == height)
     """
-    def __init__(self, data_stream, min_dimension_size, resample='nearest',
+    def __init__(self, data_stream, min_dimension_size, resample='bilinear',
                  **kwargs):
         self.min_dimension_size = min_dimension_size
         try:
@@ -83,7 +83,7 @@ class RandomRotate(Transformer):
     -----
     This transformer only works with square images (width == height)
     """
-    def __init__(self, data_stream, maximum_rotation, resample='nearest',
+    def __init__(self, data_stream, maximum_rotation, resample='bilinear',
                  **kwargs):
         self.maximum_rotation = maximum_rotation
         try:
@@ -147,7 +147,7 @@ class RandomLimit(Transformer):
     -----
     This transformer only works with square images (width == height)
     """
-    def __init__(self, data_stream, maximum_limitation, resample='nearest',
+    def __init__(self, data_stream, maximum_limitation, resample='bilinear',
                  **kwargs):
         self.maximum_limitation = maximum_limitation
         try:
@@ -199,7 +199,7 @@ class Normalize(Transformer):
     shift : float
         Shifting factor.
     """
-    def __init__(self, data_stream, resample='nearest',
+    def __init__(self, data_stream, resample='bilinear',
                  **kwargs):
         try:
             self.resample = getattr(Image, resample.upper())
@@ -343,7 +343,7 @@ class RandomFixedSizeCrop(Transformer):
 
 
 
-################################################# OLD #######################################################
+################################################# OLD ########################################################
 
 # class Cast(AgnosticSourcewiseTransformer):
 #     """Casts selected sources as some dtype.
