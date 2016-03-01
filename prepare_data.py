@@ -42,6 +42,10 @@ def get_data(lst,preproc):
        dst_path = path.rsplit(".", 1)[0] + ".64x64.jpg"
        # scipy.misc.imsave(dst_path, img)
 
+       pixel_mult = float(f.PixelSpacing[0]) * float(f.PixelSpacing[1])
+
+       img_pos = [float(i) for i in f.ImagePositionPatient]
+
        # resize to 70 px imgs
        original_height, original_width = img.shape[-2:]
        multiplier = max(70./ original_width, 70. / original_height)
@@ -54,7 +58,7 @@ def get_data(lst,preproc):
 
        result.append(dst_path)
        data.append(im)
-   return [data,result], multiplier
+   return [data,result], 1/multiplier**2 * pixel_mult, img_pos
 
 def crop_sequence(seq):
   sizes = []
@@ -92,6 +96,7 @@ n_total = n_examples_train + n_examples_submit
 output_path = './data_kaggle/kaggle_heart.hdf5'
 h5file = h5py.File(output_path, mode='w')
 dtype = h5py.special_dtype(vlen=numpy.dtype('uint16'))
+dtype_pos = h5py.special_dtype(vlen=numpy.dtype('float32'))
 
 hdf_features = h5file.create_dataset('sax_features', (n_total,), dtype=dtype)
 hdf_shapes = h5file.create_dataset('sax_features_shapes', (n_total, 4), dtype='int32')
@@ -100,6 +105,8 @@ hdf_sax = h5file.create_dataset('sax', (n_total, ), dtype=dtype)
 hdf_shapes_sax = h5file.create_dataset('sax_shapes', (n_total, 1), dtype='int32')
 hdf_labels = h5file.create_dataset('targets', (n_total, 2), dtype='float32')
 hdf_mult = h5file.create_dataset('multiplier', (n_total, 1), dtype='float32')
+hdf_position = h5file.create_dataset('image_position', (n_total, ), dtype=dtype_pos)
+hdf_shapes_position = h5file.create_dataset('image_position_shapes', (n_total, 2), dtype='int32')
 
 # Attach shape annotations and scales
 hdf_features.dims.create_scale(hdf_shapes, 'shapes')
@@ -113,7 +120,17 @@ hdf_shapes_labels[...] = ['depth'.encode('utf8'),
 hdf_features.dims.create_scale(hdf_shapes_labels, 'shape_labels')
 hdf_features.dims[0].attach_scale(hdf_shapes_labels)
 
-# Attach shape annotations and scales
+# Attach shape annotations and scales for image position
+hdf_position.dims.create_scale(hdf_shapes_position, 'shapes')
+hdf_position.dims[0].attach_scale(hdf_shapes_position)
+
+hdf_shapes_position_labels = h5file.create_dataset('image_position_labels', (2,), dtype='S7')
+hdf_shapes_position_labels[...] = ['depth'.encode('utf8'),
+                          'dimension'.encode('utf8')]
+hdf_position.dims.create_scale(hdf_shapes_position_labels, 'shape_labels')
+hdf_position.dims[0].attach_scale(hdf_shapes_position_labels)
+
+# Attach shape annotations and scales for sax number
 hdf_sax.dims.create_scale(hdf_shapes_sax, 'shapes')
 hdf_sax.dims[0].attach_scale(hdf_shapes_sax)
 
@@ -131,6 +148,7 @@ hdf_cases.dims[0].label    = 'batch'
 hdf_cases.dims[1].label    = 'index'
 hdf_mult.dims[0].label     = 'batch'
 hdf_mult.dims[1].label     = 'index'
+hdf_position.dims[0].label     = 'batch'
 
 ### loading train
 
@@ -163,6 +181,8 @@ cases_output      = []
 output_ind        = []
 sax_indexes       = []
 sax_indexes_tmp   = []
+positions = []
+positions_tmp = []
 i = 0
 with progress_bar('train', n_examples_train) as bar:
     for sequence in train_features:
@@ -170,17 +190,20 @@ with progress_bar('train', n_examples_train) as bar:
         m             = re.search('train/(.+?)/study', stri)
         case_index    = int(m.group(1))
         if case_index != index:
-          sax_indexes.append(list(numpy.unique(numpy.array(sax_indexes_tmp))))
-          cases_output.append(index)
-          images_output.append(output_ind)
-          output_ind   = []
-          sax_indexes_tmp = []
-          index       = case_index
-          index_list.append(index)
-          multiplier_output.append(multiplier)
+            sax_indexes.append(list(numpy.unique(numpy.array(sax_indexes_tmp))))
+            cases_output.append(index)
+            images_output.append(output_ind)
+            output_ind   = []
+            sax_indexes_tmp = []
+            positions.append(positions_tmp)
+            positions_tmp = []
+            index       = case_index
+            index_list.append(index)
+            multiplier_output.append(multiplier)
         m_sax         = re.search('study/sax_(.+?)/IM-', stri)
-        d, multiplier = get_data(sequence, lambda x: x)
+        d, multiplier, position = get_data(sequence, lambda x: x)
         sax_indexes_tmp.append(int(m_sax.group(1)))
+        positions_tmp.append(position)
         images        = numpy.array(d[0])
         output_ind.append(images)
         bar.update(i)
@@ -189,14 +212,15 @@ images_output.append(output_ind)
 sax_indexes.append(list(numpy.unique(numpy.array(sax_indexes_tmp))))
 cases_output.append(case_index)
 multiplier_output.append(multiplier)
+positions.append(positions_tmp)
 
 j = 0
 for i in range(len(images_output)):
   if len(sax_indexes[i]) > 1:
         try:
-          im              = numpy.array(images_output[i])
+            im              = numpy.array(images_output[i])
         except ValueError:
-          im              = crop_sequence(images_output[i])
+            im              = crop_sequence(images_output[i])
         hdf_features[j]   = im.flatten().astype(numpy.dtype('uint16'))
         hdf_shapes[j]     = im.shape
         hdf_sax[j]        = sax_indexes[i]
@@ -204,6 +228,8 @@ for i in range(len(images_output)):
         hdf_mult[j]       = multiplier_output[i]
         hdf_labels[j]     = numpy.array(labels[cases_output[i]])
         hdf_cases[j]      = cases_output[i]
+        hdf_position[j] = numpy.array(positions[i])
+        hdf_shapes_position[j] = hdf_position[j].shape
         j += 1
 n_examples_train = j
 
@@ -217,6 +243,9 @@ cases_output      = []
 output_ind        = []
 sax_indexes       = []
 sax_indexes_tmp   = []
+positions = []
+positions_tmp = []
+
 i = 0
 with progress_bar('submit', n_examples_submit) as bar:
     for sequence in submit_features:
@@ -224,17 +253,20 @@ with progress_bar('submit', n_examples_submit) as bar:
         m             = re.search('validate/(.+?)/study', stri)
         case_index    = int(m.group(1))
         if case_index != index:
-          sax_indexes.append(list(numpy.unique(numpy.array(sax_indexes_tmp))))
-          cases_output.append(index)
-          images_output.append(output_ind)
-          output_ind   = []
-          sax_indexes_tmp = []
-          index       = case_index
-          index_list.append(index)
-          multiplier_output.append(multiplier)
+            sax_indexes.append(list(numpy.unique(numpy.array(sax_indexes_tmp))))
+            cases_output.append(index)
+            images_output.append(output_ind)
+            output_ind   = []
+            sax_indexes_tmp = []
+            positions.append(positions_tmp)
+            positions_tmp = []
+            index       = case_index
+            index_list.append(index)
+            multiplier_output.append(multiplier)
         m_sax         = re.search('study/sax_(.+?)/IM-', stri)
-        d, multiplier = get_data(sequence, lambda x: x)
+        d, multiplier, position = get_data(sequence, lambda x: x)
         sax_indexes_tmp.append(int(m_sax.group(1)))
+        positions_tmp.append(position)
         images        = numpy.array(d[0])
         output_ind.append(images)
         bar.update(i)
@@ -243,24 +275,27 @@ images_output.append(output_ind)
 sax_indexes.append(list(numpy.unique(numpy.array(sax_indexes_tmp))))
 cases_output.append(case_index)
 multiplier_output.append(multiplier)
+positions.append(positions_tmp)
 
 for i in range(len(images_output)):
   if len(sax_indexes[i]) > 1:
         try:
-          im              = numpy.array(images_output[i])
+            im              = numpy.array(images_output[i])
         except ValueError:
-          im              = crop_sequence(images_output[i])
+            im              = crop_sequence(images_output[i])
         hdf_features[j]   = im.flatten().astype(numpy.dtype('uint16'))
         hdf_shapes[j]     = im.shape
         hdf_sax[j]        = sax_indexes[i]
         hdf_shapes_sax[j] = im.shape[0]
         hdf_mult[j]       = multiplier_output[i]
         hdf_cases[j]      = cases_output[i]
+        hdf_position[j] = numpy.array(positions[i])
+        hdf_shapes_position[j] = hdf_position[j].shape
         j += 1
 n_total = j-1
 # Add the labels
 split_dict = {}
-sources = ['sax_features', 'targets', 'cases', 'sax', 'multiplier']
+sources = ['sax_features', 'targets', 'cases', 'sax', 'multiplier', 'image_position']
 for name, slice_ in zip(['train', 'submit'],
                         [(0, n_examples_train), (n_examples_train, n_total)]):
     split_dict[name] = dict(zip(sources, [slice_] * len(sources)))
