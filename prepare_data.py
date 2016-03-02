@@ -48,7 +48,7 @@ def get_data(lst,preproc):
 
        # resize to 70 px imgs
        original_height, original_width = img.shape[-2:]
-       multiplier = max(70./ original_width, 70. / original_height)
+       multiplier = max(70./ original_width, 70./ original_height)
 
        width = int(math.ceil(original_width * multiplier))
        height = int(math.ceil(original_height * multiplier))
@@ -228,8 +228,8 @@ for i in range(len(images_output)):
         hdf_mult[j]       = multiplier_output[i]
         hdf_labels[j]     = numpy.array(labels[cases_output[i]])
         hdf_cases[j]      = cases_output[i]
-        hdf_position[j] = numpy.array(positions[i])
-        hdf_shapes_position[j] = hdf_position[j].shape
+        hdf_position[j]   = numpy.array(positions[i]).ravel()
+        hdf_shapes_position[j] = numpy.array(positions[i]).shape
         j += 1
 n_examples_train = j
 
@@ -289,8 +289,8 @@ for i in range(len(images_output)):
         hdf_shapes_sax[j] = im.shape[0]
         hdf_mult[j]       = multiplier_output[i]
         hdf_cases[j]      = cases_output[i]
-        hdf_position[j] = numpy.array(positions[i])
-        hdf_shapes_position[j] = hdf_position[j].shape
+        hdf_position[j]   = numpy.array(positions[i]).ravel()
+        hdf_shapes_position[j] = numpy.array(positions[i]).shape
         j += 1
 n_total = j-1
 # Add the labels
