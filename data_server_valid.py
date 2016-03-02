@@ -19,19 +19,20 @@ valid_set = H5PYDataset(
 	load_in_memory=True
 )
 
-index_cases   = 0
-index_mult    = 1
-index_sax     = 2
-index_images  = 3
-index_targets = 4
+index_cases    = 0
+index_position = 1
+index_mult     = 2
+index_sax      = 3
+index_images   = 4
+index_targets  = 5
 
 stream = DataStream.default_stream(
     valid_set,
     iteration_scheme=ShuffledScheme(valid_set.num_examples, 10)
 )
 
-downscaled_stream = RandomDownscale(stream, 70)
-cropped_stream    = RandomFixedSizeCrop(downscaled_stream, (64,64))
+#downscaled_stream = RandomDownscale(stream, 70)
+cropped_stream    = RandomFixedSizeCrop(stream, (64,64))
 float_stream      = Normalize(cropped_stream)
 padded_stream     = ZeroPadding(float_stream)
 casted_stream     = Cast(padded_stream, 'floatX')
