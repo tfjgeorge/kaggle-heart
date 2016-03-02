@@ -33,14 +33,15 @@ class RandomDownscale(Transformer):
         super(RandomDownscale, self).__init__(data_stream, **kwargs)
 
     def transform_batch(self, batch):
-        output = ([],[],[],[],[])
-        for case, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4]):
+        output = ([],[],[],[],[],[])
+        for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
             output[0].append(case)
-            output[2].append(sax)
+            output[1].append(position)
+            output[3].append(sax)
             rescaled_imgs, new_multiplier = self._example_transform(images) 
-            output[3].append(rescaled_imgs)
-            output[1].append(multiplier*new_multiplier)
-            output[4].append(targets)
+            output[4].append(rescaled_imgs)
+            output[2].append(multiplier*new_multiplier)
+            output[5].append(targets)
         return output
 
     def transform_example(self, example):
@@ -94,14 +95,15 @@ class RandomRotate(Transformer):
         super(RandomRotate, self).__init__(data_stream, **kwargs)
 
     def transform_batch(self, batch):
-        output = ([],[],[],[],[])
-        for case, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4]):
+        output = ([],[],[],[],[],[])
+        for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
             output[0].append(case)
-            output[1].append(multiplier)
-            output[2].append(sax)
+            output[1].append(position)
+            output[2].append(multiplier)
+            output[3].append(sax)
             rotated_imgs = self._example_transform(images) 
-            output[3].append(rotated_imgs)
-            output[4].append(targets)
+            output[4].append(rotated_imgs)
+            output[5].append(targets)
         return output
 
     def transform_example(self, example):
@@ -153,14 +155,15 @@ class RandomLimit(Transformer):
         super(RandomLimit, self).__init__(data_stream, **kwargs)
 
     def transform_batch(self, batch):
-        output = ([],[],[],[],[])
-        for case, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4]):
+        output = ([],[],[],[],[],[])
+        for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
             output[0].append(case)
-            output[1].append(multiplier)
-            output[2].append(sax)
+            output[1].append(position)
+            output[2].append(multiplier)
+            output[3].append(sax)
             limited_imgs = self._example_transform(images) 
-            output[3].append(limited_imgs)
-            output[4].append(targets)
+            output[4].append(limited_imgs)
+            output[5].append(targets)
         return output
 
     def transform_example(self, example):
@@ -201,14 +204,15 @@ class Normalize(Transformer):
         super(Normalize, self).__init__(data_stream, **kwargs)
 
     def transform_batch(self, batch):
-        output = ([],[],[],[],[])
-        for case, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4]):
+        output = ([],[],[],[],[],[])
+        for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
             output[0].append(case)
-            output[1].append(multiplier)
-            output[2].append(sax)
+            output[1].append(position)
+            output[2].append(multiplier)
+            output[3].append(sax)
             normalised_imgs = self._example_transform(images) 
-            output[3].append(normalised_imgs)
-            output[4].append(targets)
+            output[4].append(normalised_imgs)
+            output[5].append(targets)
         return output
 
     def transform_example(self, example):
@@ -245,14 +249,15 @@ class Cast(Transformer):
         super(Cast, self).__init__(data_stream, **kwargs)
 
     def transform_batch(self, batch):
-        output = ([],[],[],[],[])
-        for case, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4]):
+        output = ([],[],[],[],[],[])
+        for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
             output[0].append(case)
-            output[1].append(multiplier)
-            output[2].append(sax)
+            output[1].append(position)
+            output[2].append(multiplier)
+            output[3].append(sax)
             casted_imgs = self._example_transform(images) 
-            output[3].append(casted_imgs)
-            output[4].append(targets)
+            output[4].append(casted_imgs)
+            output[5].append(targets)
         return output
 
     def transform_example(self, example):
@@ -298,14 +303,15 @@ class RandomFixedSizeCrop(Transformer):
         super(RandomFixedSizeCrop, self).__init__(data_stream, **kwargs)
 
     def transform_batch(self, batch):
-        output = ([],[],[],[],[])
-        for case, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4]):
+        output = ([],[],[],[],[],[])
+        for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
             output[0].append(case)
-            output[1].append(multiplier)
-            output[2].append(sax)
+            output[1].append(position)
+            output[2].append(multiplier)
+            output[3].append(sax)
             cropped_imgs = self._example_transform(images) 
-            output[3].append(cropped_imgs)
-            output[4].append(targets)
+            output[4].append(cropped_imgs)
+            output[5].append(targets)
         return output
 
     def transform_example(self, example):
@@ -363,19 +369,23 @@ class ZeroPadding(Transformer):
         super(ZeroPadding, self).__init__(data_stream, **kwargs)
 
     def transform_batch(self, batch):
-        output = ([],[],[],[],[])
-        max_number_sax = numpy.max([batch[2][i].shape[0] for i in range(len(batch[2]))])
+        output = ([],[],[],[],[],[])
+        max_number_sax = numpy.max([batch[1][i].shape[0] for i in range(len(batch[2]))])
         max_check      = numpy.max([batch[3][i].shape[0] for i in range(len(batch[2]))])
-        if max_number_sax != max_check:
+        max_check_1    = numpy.max([batch[4][i].shape[0] for i in range(len(batch[2]))])
+        if max_number_sax != max_check or max_number_sax != max_check_1:
             raise ValueError("problem with case '{}'".format(batch[0][i]))
-        for case, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4]):
+        output = ([],[],[],[],[],[])
+        for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
             output[0].append(case)
-            output[1].append(multiplier)
-            zero_padded_sax = self._example_transform(sax, max_number_sax) 
-            output[2].append(zero_padded_sax)
+            output[2].append(multiplier)
+            zero_padded_sax = self._example_transform(sax, max_number_sax)
+            output[3].append(zero_padded_sax)
             zero_padded_imgs = self._example_transform(images, max_number_sax) 
-            output[3].append(zero_padded_imgs)
-            output[4].append(targets)
+            output[4].append(zero_padded_imgs)
+            output[5].append(targets)
+            zero_padded_position = self._example_transform(position, max_number_sax)
+            output[1].append(zero_padded_position)
         return output
 
     def transform_example(self, example):
@@ -383,7 +393,11 @@ class ZeroPadding(Transformer):
 
     def _example_transform(self, example, max_number_sax):
         result = example
-        if example.ndim == 1:
+        if example.ndim == 2:
+            if example.shape[0] < max_number_sax:
+                result = numpy.zeros([max_number_sax, 3])
+                result[:example.shape[0]] = example
+        elif example.ndim == 1:
             if example.shape[0] < max_number_sax:
                 result = numpy.zeros(max_number_sax).astype('int16') - 1
                 result[:example.shape[0]] = example
