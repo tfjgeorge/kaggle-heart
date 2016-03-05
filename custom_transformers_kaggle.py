@@ -360,6 +360,7 @@ class ZeroPadding(Transformer):
     """
     def __init__(self, data_stream, resample='bilinear',
                  **kwargs):
+        self.max=22
         try:
             self.resample = getattr(Image, resample.upper())
         except AttributeError:
@@ -379,12 +380,12 @@ class ZeroPadding(Transformer):
         for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
             output[0].append(case)
             output[2].append(multiplier)
-            zero_padded_sax = self._example_transform(sax, max_number_sax)
+            zero_padded_sax = self._example_transform(sax, self.max)
             output[3].append(zero_padded_sax)
-            zero_padded_imgs = self._example_transform(images, max_number_sax) 
+            zero_padded_imgs = self._example_transform(images, self.max) 
             output[4].append(zero_padded_imgs)
             output[5].append(targets)
-            zero_padded_position = self._example_transform(position, max_number_sax)
+            zero_padded_position = self._example_transform(position, self.max)
             output[1].append(zero_padded_position)
         return output
 
