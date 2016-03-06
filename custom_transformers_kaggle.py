@@ -4,6 +4,7 @@ from fuel.transformers import ExpectsAxisLabels, Transformer, SourcewiseTransfor
 from fuel import config
 import math
 import random
+from sklearn import linear_model
 
 class RandomDownscale(Transformer):
     """Randomly downscale a video with minimum dimension given as parameter
@@ -66,6 +67,52 @@ class RandomDownscale(Transformer):
 
                 target[i,j,:,:] = im
         return target, multiplier
+
+class OrderFeatures(Transformer):
+    """Randomly downscale a video with minimum dimension given as parameter
+    Parameters
+    ----------
+    data_stream : instance of :class:`AbstractDataStream`
+        The data stream to wrap.
+    min_dimension_size : int
+        The desired length of the smallest dimension.
+    resample : str, optional
+        Resampling filter for PIL to use to upsample any images requiring
+        it. Options include 'nearest' (default), 'bilinear', and 'bicubic'.
+        See the PIL documentation for more detailed information.
+    Notes
+    -----
+    This transformer only works with square images (width == height)
+    """
+    def __init__(self, data_stream, resample='bilinear',
+                 **kwargs):
+        kwargs.setdefault('produces_examples', data_stream.produces_examples)
+        kwargs.setdefault('axis_labels', data_stream.axis_labels)
+        super(OrderFeatures, self).__init__(data_stream, **kwargs)
+
+    def transform_batch(self, batch):
+        clf = linear_model.LinearRegression()
+        output = ([],[],[],[],[],[])
+        for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
+            clf.fit(position[:,:2], position[:,2])
+            new_coordinates = numpy.array([position[:,0], position[:,1], clf.predict(position[:,:2])]).T
+            origine         = numpy.array([0,0,clf.predict([0,0])])
+            index           = numpy.argsort(numpy.sum((origine - new_coordinates)**2, axis=1))
+            output[0].append(case)
+            output[1].append(position[index])
+            output[3].append(sax[index])
+            output[4].append(images[index])
+            output[2].append(multiplier)
+            output[5].append(targets)
+        return output
+
+    def transform_example(self, example):
+        return self._example_transform(example)
+
+    def _example_transform(self, example):
+        if example.ndim > 4 or example.ndim < 3:
+            raise NotImplementedError
+        return 0
 
 class RandomRotate(Transformer):
     """Randomly downscale a video with minimum dimension given as parameter
