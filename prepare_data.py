@@ -48,7 +48,7 @@ def get_data(lst,preproc):
 
        # resize to 70 px imgs
        original_height, original_width = img.shape[-2:]
-       multiplier = max(70./ original_width, 70./ original_height)
+       multiplier = max(80./ original_width, 80./ original_height)
 
        width = int(math.ceil(original_width * multiplier))
        height = int(math.ceil(original_height * multiplier))
