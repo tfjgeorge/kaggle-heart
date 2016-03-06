@@ -32,7 +32,8 @@ stream = DataStream.default_stream(
 )
 
 #downscaled_stream = RandomDownscale(stream, 70)
-cropped_stream    = RandomFixedSizeCrop(stream, (64,64))
+order_stream      = OrderFeatures(stream)
+cropped_stream    = RandomFixedSizeCrop(order_stream, (64,64))
 float_stream      = Normalize(cropped_stream)
 padded_stream     = ZeroPadding(float_stream)
 casted_stream     = Cast(padded_stream, 'floatX')
