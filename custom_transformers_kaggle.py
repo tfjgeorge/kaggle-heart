@@ -97,7 +97,8 @@ class OrderFeatures(Transformer):
             clf.fit(position[:,:2], position[:,2])
             new_coordinates = numpy.array([position[:,0], position[:,1], clf.predict(position[:,:2])]).T
             origine         = numpy.array([0,0,clf.predict([0,0])])
-            index           = numpy.argsort(numpy.sum((origine - new_coordinates)**2, axis=1))
+            index           = numpy.argsort(numpy.sign(numpy.sum(origine) - numpy.sum(new_coordinates, axis=1)) * numpy.sum((origine - new_coordinates)**2, axis=1))
+            #index           = numpy.argsort(numpy.sum((origine - new_coordinates)**2, axis=1))
             output[0].append(case)
             output[1].append(position[index])
             output[3].append(sax[index])
