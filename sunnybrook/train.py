@@ -15,6 +15,9 @@ import socket
 import theano.tensor as T
 import numpy
 
+from lasagne.objectives import binary_crossentropy
+
+
 def run(get_model, model_name):
 	train_stream = ServerDataStream(('cases', 'image_features', 'image_targets', 'multiplier'), False, hwm=10)
 	valid_stream = ServerDataStream(('cases', 'image_features', 'image_targets', 'multiplier'), False, hwm=10, port=5558)
@@ -24,11 +27,14 @@ def run(get_model, model_name):
 	multiply_var = tensor.matrix('multiplier')
 	multiply_var = T.addbroadcast(multiply_var, 1)
 
-	test_prediction, prediction, loss, params = get_model(input_var, target_var, multiply_var)
+	test_prediction, prediction, params = get_model(input_var, target_var, multiply_var)
+
+	loss = binary_crossentropy(prediction, target_var).mean()
+
 
 	loss.name = 'loss'
 
-	valid_error = T.neq((test_prediction[:,0,:,:,:]>0.5)*1., target_var).mean()
+	valid_error = T.neq((test_prediction>0.5)*1., target_var).mean()
 	valid_error.name = 'error'
 
 	scale = Scale(0.1)
