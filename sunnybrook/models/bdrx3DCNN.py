@@ -10,7 +10,7 @@ import theano
 import theano.tensor as T
 
 
-def get_model(input_var, target_var, multiply_var):
+def get_model(input_var, multiply_var):
 
     # input layer with unspecified batch size
     layer     = InputLayer(shape=(None, 12, 64, 64), input_var=input_var) #InputLayer(shape=(None, 1, 30, 64, 64), input_var=input_var)
@@ -50,7 +50,6 @@ def get_model(input_var, target_var, multiply_var):
 
     # Loss
     prediction           = get_output(layer_prediction)
-    loss                 = binary_crossentropy(prediction[:,0,:,:,:], target_var).mean()
 
     #Updates : Stochastic Gradient Descent (SGD) with Nesterov momentum
     params               = get_all_params(layer_prediction, trainable=True)
@@ -58,6 +57,5 @@ def get_model(input_var, target_var, multiply_var):
     # Create a loss expression for validation/testing. The crucial difference
     # here is that we do a deterministic forward pass through the network, disabling dropout layers.
     test_prediction      = get_output(layer_prediction, deterministic=True)
-    test_loss            = binary_crossentropy(test_prediction[:,0,:,:,:], target_var).mean()
 
-    return test_prediction, prediction, loss, params
+    return test_prediction[:,0,:,:,:], prediction[:,0,:,:,:], params
