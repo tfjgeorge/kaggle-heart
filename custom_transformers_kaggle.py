@@ -60,7 +60,7 @@ class ApplyMask(Transformer):
 
         for i in range(depth):
             for j in range(time):
-                example[i,j] = example[i,j] * numpy.array(im_mask.resize((width,height), resample=self.resample))
+                example[i,j] = example[i,j] * numpy.array(im_mask.resize((width,height), resample=self.resample)).astype(dt)
 
         return example.astype(dt)
 
