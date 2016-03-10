@@ -53,16 +53,18 @@ class ApplyMask(Transformer):
             raise NotImplementedError
         depth, time, height, width = example.shape
 
-        mask    = pkl.load(open("mask.pkl","rb"))*1
+        mask    = pkl.load(open("mask.pkl","rb"))
         im_mask = Image.fromarray(mask.astype('int16'))
 
         dt     = example.dtype
 
+        target = numpy.zeros((depth, time, height, width))
         for i in range(depth):
             for j in range(time):
-                example[i,j] = example[i,j] * numpy.array(im_mask.resize((width,height), resample=self.resample)).astype(dt)
 
-        return example.astype(dt)
+                target[i,j] = example[i,j] * numpy.array(im_mask.resize((width,height), resample=self.resample))
+
+        return target.astype(dt)
 
 class RandomDownscale(Transformer):
     """Randomly downscale a video with minimum dimension given as parameter
