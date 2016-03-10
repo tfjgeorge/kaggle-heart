@@ -31,11 +31,12 @@ def run(get_model, model_name):
 	valid_error = T.neq((test_prediction[:,0,:,:,:]>0.5)*1., target_var).mean()
 	valid_error.name = 'error'
 
+	scale = Scale(0.1)
 	algorithm = GradientDescent(
 		cost=loss,
 		parameters=params,
-		#step_rule=Scale(0.01),
-		step_rule=Adam(),
+		step_rule=scale,
+		#step_rule=Adam(),
 		on_unused_sources='ignore'
 	)
 
@@ -48,15 +49,16 @@ def run(get_model, model_name):
 		Plot('%s %s %s' % (model_name, datetime.date.today(), time.strftime('%H:%M')), channels=[['loss','valid_loss'],['valid_error']], after_epoch=True, server_url=host_plot),
 		Printing(),
 		# Checkpoint('train'),
-		FinishAfter(after_n_epochs=50)
+		FinishAfter(after_n_epochs=10)
 	]
 
 	main_loop = MainLoop(data_stream=train_stream, algorithm=algorithm,
 	                     extensions=extensions)
-	main_loop.run()
-
-	cg = ComputationGraph(prediction)
-	numpy.savez('best_weights.npz', [param.get_value() for param in cg.shared_variables])
+	cg = ComputationGraph(test_prediction)
+	while True:
+		main_loop.run()
+		scale.learning_rate.set_value(numpy.float32(scale.learning_rate.get_value()*0.7))
+		numpy.savez('best_weights.npz', [param.get_value() for param in cg.shared_variables])
 
 
 
