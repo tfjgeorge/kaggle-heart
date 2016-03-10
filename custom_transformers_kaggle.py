@@ -5,6 +5,64 @@ from fuel import config
 import math
 import random
 from sklearn import linear_model
+import pickle as pkl
+
+class ApplyMask(Transformer):
+    """Randomly downscale a video with minimum dimension given as parameter
+    Parameters
+    ----------
+    data_stream : instance of :class:`AbstractDataStream`
+        The data stream to wrap.
+    min_dimension_size : int
+        The desired length of the smallest dimension.
+    resample : str, optional
+        Resampling filter for PIL to use to upsample any images requiring
+        it. Options include 'nearest' (default), 'bilinear', and 'bicubic'.
+        See the PIL documentation for more detailed information.
+    Notes
+    -----
+    This transformer only works with square images (width == height)
+    """
+    def __init__(self, data_stream, resample='nearest',
+                 **kwargs):
+        try:
+            self.resample = getattr(Image, resample.upper())
+        except AttributeError:
+            raise ValueError("unknown resampling filter '{}'".format(resample))
+        kwargs.setdefault('produces_examples', data_stream.produces_examples)
+        kwargs.setdefault('axis_labels', data_stream.axis_labels)
+        super(ApplyMask, self).__init__(data_stream, **kwargs)
+
+    def transform_batch(self, batch):
+        output = ([],[],[],[],[],[])
+        for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
+            output[0].append(case)
+            output[1].append(position)
+            output[3].append(sax)
+            masked_imgs = self._example_transform(images) 
+            output[4].append(masked_imgs)
+            output[2].append(multiplier)
+            output[5].append(targets)
+        return output
+
+    def transform_example(self, example):
+        return self._example_transform(example)
+
+    def _example_transform(self, example):
+        if example.ndim > 4 or example.ndim < 3:
+            raise NotImplementedError
+        depth, time, height, width = example.shape
+
+        mask    = pkl.load(open("mask.pkl","rb"))*1
+        im_mask = Image.fromarray(mask.astype('int16'))
+
+        dt     = example.dtype
+
+        for i in range(depth):
+            for j in range(time):
+                example[i,j] = example[i,j] * numpy.array(im_mask.resize((width,height), resample=self.resample))
+
+        return example.astype(dt)
 
 class RandomDownscale(Transformer):
     """Randomly downscale a video with minimum dimension given as parameter
