@@ -39,5 +39,5 @@ float_stream      = Normalize(cropped_stream)
 padded_stream     = ZeroPadding(float_stream)
 casted_stream     = Cast(padded_stream, 'floatX')
 
-start_server(casted_stream, hwm=10)
+start_server(casted_stream, port=5558, hwm=10)
 
