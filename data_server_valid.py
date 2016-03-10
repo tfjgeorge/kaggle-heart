@@ -5,7 +5,7 @@ from fuel.server import start_server
 from fuel.transformers import Flatten, ScaleAndShift
 from fuel.transformers.image import  Random2DRotation
 from fuel.transformers.video import RescaleMinDimension
-from custom_transformers_kaggle import RandomLimit, RandomFixedSizeCrop, Normalize, Cast, RandomRotate, ZeroPadding
+from custom_transformers_kaggle import RandomLimit, RandomFixedSizeCrop, Normalize, Cast, RandomRotate, ZeroPadding, OrderFeatures, ApplyMask
 import math
 import numpy
 
