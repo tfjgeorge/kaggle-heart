@@ -54,17 +54,19 @@ class ApplyMask(Transformer):
         depth, time, height, width = example.shape
 
         mask    = pkl.load(open("mask.pkl","rb"))
+        mask    = mask*1
         im_mask = Image.fromarray(mask.astype('int16'))
+        resized_mask  = im_mask.resize((height,width))
+        array_mask    = numpy.array(resized_mask.getdata()).reshape(height, width)
 
         dt     = example.dtype
 
-        target = numpy.zeros((depth, time, height, width))
         for i in range(depth):
             for j in range(time):
 
-                target[i,j] = numpy.multiply(example[i,j],numpy.array(im_mask.resize((width,height), resample=self.resample)))
+                example[i,j]   = numpy.multiply(example[i,j],array_mask)
 
-        return target.astype(dt)
+        return example.astype(dt)
 
 class RandomDownscale(Transformer):
     """Randomly downscale a video with minimum dimension given as parameter
