@@ -5,8 +5,7 @@ from fuel.server import start_server
 from fuel.transformers import Flatten, ScaleAndShift
 from fuel.transformers.image import  Random2DRotation
 from fuel.transformers.video import RescaleMinDimension
-from custom_transformers_kaggle import RandomLimit, RandomFixedSizeCrop, Normalize, Cast, RandomRotate, ZeroPadding, RandomDownscale, OrderFeatures
-import math
+from custom_transformers_kaggle import RandomLimit, RandomFixedSizeCrop, Normalize, Cast, RandomRotate, ZeroPadding, RandomDownscale, OrderFeatures, ApplyMask
 import math
 
 # number_train = 494 (counting valid set)
@@ -31,7 +30,8 @@ stream = DataStream.default_stream(
 )
 
 #downscaled_stream = RandomDownscale(order_stream, 70)
-order_stream      = OrderFeatures(stream)
+masked_stream     = ApplyMask(stream)
+order_stream      = OrderFeatures(masked_stream)
 cropped_stream    = RandomFixedSizeCrop(order_stream, (64,64))
 rotated_stream    = RandomRotate(cropped_stream, math.pi/10)
 float_stream      = Normalize(cropped_stream)
