@@ -12,6 +12,7 @@ import time
 import sys
 import socket
 import theano.tensor as T
+from lasagne.objectives import squared_error
 
 
 
@@ -24,7 +25,9 @@ def run(get_model, model_name):
 	multiply_var = tensor.matrix('multiplier')
 	multiply_var = T.addbroadcast(multiply_var, 1)
 
-	prediction, crps, loss, params = get_model(input_var, target_var, multiply_var)
+	prediction, crps, params_bottom, params_top = get_model(input_var, multiply_var)
+
+	loss = squared_error(prediction, target_var).mean()
 
 	loss.name = 'loss'
 	crps.name = 'crps'
