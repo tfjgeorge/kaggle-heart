@@ -56,7 +56,7 @@ class ApplyMask(Transformer):
         mask    = pkl.load(open("mask.pkl","rb"))
         mask    = mask*1
         im_mask = Image.fromarray(mask.astype('int16'))
-        resized_mask  = im_mask.resize((height,width))
+        resized_mask  = im_mask.resize((width,height))
         array_mask    = numpy.array(resized_mask.getdata()).reshape(height, width)
 
         dt     = example.dtype
