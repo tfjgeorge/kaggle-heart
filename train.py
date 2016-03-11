@@ -4,9 +4,11 @@ from theano import tensor
 from blocks.extensions import Printing, Timing, FinishAfter
 from blocks.extensions.saveload import Checkpoint
 from blocks.extensions.monitoring import TrainingDataMonitoring, DataStreamMonitoring
+from blocks.graph import ComputationGraph
 from blocks.algorithms import GradientDescent, Adam
 from blocks.main_loop import MainLoop
 from blocks_extras.extensions.plot import Plot
+import numpy
 import datetime
 import time
 import sys
@@ -17,15 +19,26 @@ from lasagne.objectives import squared_error
 
 
 def run(get_model, model_name):
-	train_stream = ServerDataStream(('cases','multiplier','sax_features','targets'), False, hwm=10)
-	valid_stream = ServerDataStream(('cases','multiplier','sax_features','targets'), False, hwm=10, port=5558)
+	train_stream = ServerDataStream(('cases', 'image_position', 'multiplier', 'sax', 'sax_features', 'targets'), False, hwm=10)
+	valid_stream = ServerDataStream(('cases', 'image_position', 'multiplier', 'sax', 'sax_features', 'targets'), False, hwm=10, port=5558)
 
-	input_var = tensor.tensor4('sax_features')
+	ftensor5 = tensor.TensorType('float32', (False,)*5)
+
+	input_var  = ftensor5('sax_features')
 	target_var = tensor.matrix('targets')
 	multiply_var = tensor.matrix('multiplier')
 	multiply_var = T.addbroadcast(multiply_var, 1)
 
-	prediction, crps, params_bottom, params_top = get_model(input_var, multiply_var)
+	prediction, test_prediction, test_pred_mid, params_bottom, params_top = get_model(input_var, multiply_var)
+
+	# load parameters
+	cg = ComputationGraph(test_pred_mid)
+	params_val = numpy.load('sunnybrook/best_weights.npz')
+	
+	for p, value in zip(cg.shared_variables, params_val['arr_0']):
+		p.set_value(value)
+
+	crps = tensor.abs_(test_prediction - target_var).mean()
 
 	loss = squared_error(prediction, target_var).mean()
 
@@ -34,7 +47,7 @@ def run(get_model, model_name):
 
 	algorithm = GradientDescent(
 		cost=loss,
-		parameters=params,
+		parameters=params_top,
 		step_rule=Adam(),
 		on_unused_sources='ignore'
 	)

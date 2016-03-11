@@ -15,7 +15,8 @@ import numpy
 valid_set = H5PYDataset(
 	'./data_kaggle/kaggle_heart.hdf5',
 	which_sets=('train',),
-	subset=slice(451, 494), 
+	#subset=slice(451, 494), 
+	subset=slice(451, 491), 
 	load_in_memory=True
 )
 
