@@ -116,7 +116,7 @@ class RandomDownscale(Transformer):
         depth, time, height, width = example.shape
 
         new_size = random.randint(self.min_dimension_size, width)
-        multiplier = float(new_size)/width
+        multiplier = (float(width)/float(new_size))**2
 
         dt     = example.dtype
         target = numpy.zeros((depth, time, new_size, new_size))
@@ -158,7 +158,7 @@ class OrderFeatures(Transformer):
         for case, position, multiplier, sax, images, targets in zip(batch[0], batch[1], batch[2], batch[3], batch[4], batch[5]):
             clf.fit(position[:,:2], position[:,2])
             new_coordinates = numpy.array([position[:,0], position[:,1], clf.predict(position[:,:2])]).T
-            origine         = numpy.array([0,0,clf.predict([0,0])])
+            origine         = numpy.array([0,0,clf.predict([[0,0]])])
             index           = numpy.argsort(numpy.sign(numpy.sum(origine) - numpy.sum(new_coordinates, axis=1)) * numpy.sum((origine - new_coordinates)**2, axis=1))
             #index           = numpy.argsort(numpy.sum((origine - new_coordinates)**2, axis=1))
             output[0].append(case)
