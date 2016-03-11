@@ -334,7 +334,10 @@ class Normalize(Transformer):
         depth, time, height, width = example.shape
         target = numpy.zeros((depth, time, height, width))
         for i in range(depth):
-            target[i] = (example[i] - numpy.mean(example[i]))/numpy.std(example[i])
+	    if numpy.std(example[i]) == 0:
+		target[i] = numpy.zeros(target[i].shape)
+	    else:
+            	target[i] = (example[i] - numpy.mean(example[i]))/numpy.std(example[i])
         return target
 
 
